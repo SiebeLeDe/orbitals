@@ -4,6 +4,22 @@ The following terms can be extracted form the rkf files:
 - Overlap (in a.u.)
 - Orbital Energy (in eV)
 - Occupation (in a.u.)
+
+BEFORE READING FURTHER: please read the following section about the format of the rkf files:
+https://www.scm.com/doc/ADF/Appendices/TAPE21.html
+
+Important sections together with associated variables are (format: ("section", "variable")):
+- "Symmetry", "symlab" = Symmetry labels of the irreps
+- "Symmetry", "ncbs"   = Number of frozen cores per irrep
+- "SFOs", "fragment"   = Fragment index of the ACTIVE* SFOs
+- "SFOs", "subspecies" = Symmetry labels of each ACTIVE SFO (e.g. 1: "A1", 2: "A1", 3: "A2", 4: "A2", ...)
+- "SFOs", "occupation" = Occupations of the ACTIVE SFOs
+- "SFOs", "escale"     = Orbital energies of ACTIVE SFOs in Ha (relativistic effects are taken into account)
+- "SFOs", "energy"     = Orbital energies of ACTIVE SFOs in Ha (relativistic effects are NOT taken into account)
+- "SFO popul", "sfo_grosspop" = Gross populations of the SFOs (FROZEN SFOS INCLUDED!)
+
+that can be viewed in the KF Browser of AMS (open a "adf.rkf" file and press "ctrl + E" on Windows or "cmd + E" on Mac).
+* Active SFOs are SFOs that are not frozen cores.
 """
 from __future__ import annotations
 
@@ -38,42 +54,45 @@ def split_1d_array_into_dict_sorted_by_symlabels(data_array: Array1D, symlabels:
 def uses_symmetry(kf_file: KFFile) -> bool:
     """ Returns True if the complex calculation uses symmetry for its MOs and other parts such as gross populations and overlap. """
     grouplabel = kf_file.read("Symmetry", "grouplabel").split()  # type: ignore
-    
+
     if grouplabel[0].lower() == "nosym":
         return False
     return True
+
 
 def get_sfo_indices_of_one_frag(kf_file: KFFile, frag_index: int) -> Sequence[int]:
     """ Returns the indices of *active* SFOs belonging to one fragment. """
     sfo_frag_indices: list[int] = kf_file.read("SFOs", "fragment", return_as_list=True)  # type: ignore
     sfo_frag_indices = [int(sfo_index) for sfo_index in sfo_frag_indices if sfo_index == frag_index]
-    
+
     return sfo_frag_indices
 
+
 def get_ordered_symlabels_of_one_frag(kf_file: KFFile, frag_index: int) -> Sequence[str]:
-    """ Returns the ordered symlabels of *active* SFOs (frozen core SFOs excluded) belonging to one fragment. """    
+    """ Returns the ordered symlabels of *active* SFOs (frozen core SFOs excluded) belonging to one fragment. """
     sfo_frag_index: list[int] = kf_file.read("SFOs", "fragment", return_as_list=True)  # type: ignore
     sfo_sym_labels: list[str] = kf_file.read("SFOs", "subspecies", return_as_list=True).split()  # type: ignore
-    
+
     sfo_sym_labels_of_one_frag = []
     for sfo_index, sfo_sym_label in zip(sfo_frag_index, sfo_sym_labels):
         if sfo_index == frag_index and sfo_sym_label not in sfo_sym_labels_of_one_frag:
             sfo_sym_labels_of_one_frag.append(sfo_sym_label)
- 
+
     return sfo_sym_labels_of_one_frag
-        
+
 
 def get_number_sfos_per_irrep_per_frag(kf_file: KFFile, frag_index: int) -> OrderedDict[str, int]:
     """ Returns the number of *active* SFOs of one irrep (frozen core SFOs excluded) belonging to one fragment. """
     sfo_frag_index: list[int] = kf_file.read("SFOs", "fragment", return_as_list=True)  # type: ignore
     sfo_sym_labels: list[str] = kf_file.read("SFOs", "subspecies", return_as_list=True).split()  # type: ignore
-    
+
     sfo_sym_label_sum = OrderedDict({sym_label: 0 for sym_label in set(sfo_sym_labels)})
     for sfo_index, sfo_sym_label in zip(sfo_frag_index, sfo_sym_labels):
         if sfo_index == frag_index:
             sfo_sym_label_sum[sfo_sym_label] += 1
 
     return sfo_sym_label_sum
+
 
 # --------------------Frozen Core Handling-------------------- #
 
@@ -89,19 +108,15 @@ def get_frozen_cores_per_irrep(kf_file: KFFile, frag_index: int) -> dict[str, in
     In case there is no frozen core and no symmetry, but the fragments use symmetry, then the frozen core is 0 for all irreps that are present in the fragments.
     """
     ordered_frag_sym_labels = get_ordered_symlabels_of_one_frag(kf_file, frag_index=frag_index)
-    n_core_orbs_per_irrep: list[int] = kf_file.read("Symmetry", "ncbs", return_as_list=True)  # type: ignore since n_core_orbs is a list of ints  
-    
+    n_core_orbs_per_irrep: list[int] = kf_file.read("Symmetry", "ncbs", return_as_list=True)  # type: ignore since n_core_orbs is a list of ints
+
     frozen_core_per_irrep = {irrep: n_frozen_cores for irrep, n_frozen_cores in zip(ordered_frag_sym_labels, n_core_orbs_per_irrep)}  # type: ignore
-    
+
     # Add the "A" irrep to the dictionary for the case when symmetry is not used (e.g. NoSym), but the fragments themselves use symmetry.
-    # This is only used for the overlap analysis.    
+    # This is only used for the overlap analysis.
     if not uses_symmetry(kf_file):
         frozen_core_per_irrep["A"] = sum(n_core_orbs_per_irrep)
     return frozen_core_per_irrep
-
-    # # This is the case when there are no frozen cores and without symmetry, but the fragments themselves use symmetry...
-    # if len(n_core_orbs) == 1 and n_core_orbs[0] == 0:
-    #     return n_frozen_cores_per_irrep_summed | {irrep: 0 for irrep in sym_labels_right_order}
 
 # --------------------Restricted Property Function(s)-------------------- #
 
@@ -166,30 +181,30 @@ def get_restricted_fragment_properties(kf_file: KFFile, sfo_indices_of_one_frag:
     return data_dic_to_be_unpacked
 
 
-def get_gross_populations(kf_file: KFFile, frag_index: int=1) -> dict[str, Array1D[np.float64]]:
+def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, Array1D[np.float64]]:
     """
     Reads the gross populations from the KFFile by taking into account the frozen cores.
     Annoyingly, the "SFOs" sections contains the SFOs of both fragments that ALREADY HAVE BEEN FILTERED for the frozen cores.
     For example, the SFOs number may be 114, but the gross population array may have 148 entries. This is because the first 34 entries are the frozen cores.
 
     Structure of the ("SFOs popul","sfo_grosspop") section for a restricted calculation with c3v symmetry:
-    [n Frozen Cores A1, Active SFOs Frag1 A1, Active SFOs Frag2 A1, n Frozen Cores A2, Active SFOs Frag1 A2, Active SFOs Frag2 A2, ...] 
+    [n Frozen Cores A1, Active SFOs Frag1 A1, Active SFOs Frag2 A1, n Frozen Cores A2, Active SFOs Frag1 A2, Active SFOs Frag2 A2, ...]
 
     Therefore, the sum of `sfo_indices_of_one_frag` and `n_frozen_cores_per_irrep` is used to get the correct indices for SFOs on both fragments and all irreps.
     """
     symmetry_used = uses_symmetry(kf_file)
     frags_sfo_irrep_sums = [get_number_sfos_per_irrep_per_frag(kf_file, frag_index=frag_index) for frag_index in [1, 2]]
-    
+
     ordered_sym_labels = get_ordered_symlabels_of_one_frag(kf_file, frag_index=frag_index)
     frozen_core_per_irrep = get_frozen_cores_per_irrep(kf_file, frag_index=frag_index)
-    
+
     raw_gross_pop_all_sfos = read_restricted_gross_populations(kf_file, "SFO popul", "sfo_grosspop")
 
     if not symmetry_used:
         start_index = sum(frozen_core_per_irrep[irrep] for irrep in frozen_core_per_irrep)
-        total_sfo_sum_frag1 = sum(frags_sfo_irrep_sums[0][irrep] for irrep in frags_sfo_irrep_sums[0]) 
-        total_sfo_sum_frag2 = sum(frags_sfo_irrep_sums[1][irrep] for irrep in frags_sfo_irrep_sums[1]) 
-        
+        total_sfo_sum_frag1 = sum(frags_sfo_irrep_sums[0][irrep] for irrep in frags_sfo_irrep_sums[0])
+        total_sfo_sum_frag2 = sum(frags_sfo_irrep_sums[1][irrep] for irrep in frags_sfo_irrep_sums[1])
+
         if frag_index == 1:
             return {"A": raw_gross_pop_all_sfos[start_index:total_sfo_sum_frag1]}
 
@@ -202,33 +217,35 @@ def get_gross_populations(kf_file: KFFile, frag_index: int=1) -> dict[str, Array
         n_frozen_cores = frozen_core_per_irrep[irrep] if irrep in frozen_core_per_irrep else 0
         n_sfos_frag1 = frags_sfo_irrep_sums[0][irrep]
         n_sfos_frag2 = frags_sfo_irrep_sums[1][irrep]
-        
+
         start_irrep_index = raw_gross_pop_index + n_frozen_cores
-        
+
         if frag_index == 1:
             end_irrep_index = start_irrep_index + n_sfos_frag1
         else:
             start_irrep_index += n_sfos_frag1
             end_irrep_index = start_irrep_index + n_sfos_frag2
-            
+
         gross_pop_active_sfos[irrep] = raw_gross_pop_all_sfos[start_irrep_index: end_irrep_index]
-        
+
         raw_gross_pop_index += sum(frags_sfo_irrep_sums[frag_i][irrep] for frag_i in [0, 1]) + n_frozen_cores
-             
+
     return gross_pop_active_sfos
+
 
 def main():
     import pathlib as pl
-    
+
     current_dir = pl.Path(__file__).parent
     rkf_dir = current_dir.parent.parent / "test" / "fixtures" / "rkfs"
     rkf_file = "restricted_largecore_differentfragsym_c4v_full.adf.rkf"
     kf_file = KFFile(str(rkf_dir / rkf_file))
-    
+
     print(get_number_sfos_per_irrep_per_frag(kf_file, frag_index=2))
     print(uses_symmetry(kf_file))
     grospop = get_gross_populations(kf_file, frag_index=2)
     print(grospop)
+
 
 if __name__ == "__main__":
     main()

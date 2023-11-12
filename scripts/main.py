@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from orb_analysis.complex import create_calc_analyser
+from orb_analysis.fa_calc.complex import create_calc_analyser
 
 np.set_printoptions(precision=5, suppress=True)
 # https://www.scm.com/doc/ADF/Appendices/TAPE21.html
@@ -86,13 +86,13 @@ frag_counter = 1
 for frag, frag_label in zip(calc_analyzer.fragments, [frag1_labels, frag2_labels]):
     name = frag.name
     for sfo in frag_label:
-        orb_energy = calc_analyzer.get_orbital_energy(fragment=frag_counter, sfo=sfo)
-        gross_pop = calc_analyzer.get_gross_population(fragment=frag_counter, sfo=sfo)
+        orb_energy = calc_analyzer.get_sfo_orbital_energy(fragment=frag_counter, sfo=sfo)
+        gross_pop = calc_analyzer.get_sfo_gross_population(fragment=frag_counter, sfo=sfo)
         print(f"Fragment {frag_counter}, SFO {sfo :6s}: {orb_energy :^+.4f} Ha, {gross_pop :<.5f} electrons")
     frag_counter += 1
 
 overlap = np.array([
-    [calc_analyzer.get_overlap(sfo1=label1, sfo2=label2) for label2 in frag2_labels]
+    [calc_analyzer.get_sfo_overlap(sfo1=label1, sfo2=label2) for label2 in frag2_labels]
     for label1 in frag1_labels
 ])
 
