@@ -1,44 +1,54 @@
 ﻿from abc import ABC
 import attrs
-import numpy as np
-from orb_analysis.custom_types import Array1D
+from orb_analysis.custom_types import RestrictedProperty, UnrestrictedProperty, SpinTypes
 from scm.plams import KFFile
-from typing import Sequence
-from orb_analysis.orbital_functions import get_frozen_cores_per_irrep, get_gross_populations, get_restricted_fragment_properties
+from orb_analysis.orb_functions.sfo_functions import get_frozen_cores_per_irrep, get_gross_populations, get_fragment_properties, get_frag_name
 
 
 def create_fragment_data(restricted_frag: bool, frag_index: int, kf_file: KFFile):
     """
     Creates a fragment data object from the kf_file. The type of fragment object depends on the calculation type (restricted or unrestricted).
     """
-    # There are two important terms required for reading the fragment data: the indices of the SFOs and their corresponding symlabels (=irreps)
-    # These can be passed to the get_fragment_properties function to get the data for the current fragment
-    sfo_indices_one_frag = [i for i, sfo_frag_index in enumerate(kf_file.read("SFOs", "fragment")) if sfo_frag_index == frag_index]  # type: ignore
-
-    # Here we select the symlabels that belong to the current fragment (see self.frag_index)
-    frag_symlabels_each_sfo = list(kf_file.read("SFOs", "subspecies").split())  # type: ignore
-    frag_symlabels_each_sfo = [frag_symlabels_each_sfo[i] for i in sfo_indices_one_frag]
-
     if restricted_frag:
-        return _create_restricted_fragment_data(kf_file, frag_index, sfo_indices_one_frag, frag_symlabels_each_sfo)
+        return _create_restricted_fragment_data(kf_file, frag_index)
     else:
-        return _create_restricted_fragment_data(kf_file, frag_index, sfo_indices_one_frag, frag_symlabels_each_sfo)
+        return _create_unrestricted_fragment_data(kf_file, frag_index)
 
 
-def _create_restricted_fragment_data(kf_file: KFFile, frag_index: int, sfo_indices_one_frag: Sequence[int], frag_symlabels_each_sfo: Sequence[str]):
+def _create_restricted_fragment_data(kf_file: KFFile, frag_index: int):
+    data_dic_to_be_unpacked = {}
 
-    frag_name = kf_file.read("SFOs", "fragtype").split()[sfo_indices_one_frag[0]]  # type: ignore
+    # Get the fragment name
+    frag_name = get_frag_name(kf_file, frag_index)
 
     # Get the number of frozen cores per irrep because the SFO indices are shifted by the number of frozen cores for gross populations and overlap analyses
     n_frozen_cores_per_irrep = get_frozen_cores_per_irrep(kf_file, frag_index)
 
     # Get regular properties such as occupations and orbital energies
-    data_dic_to_be_unpacked = get_restricted_fragment_properties(kf_file, sfo_indices_one_frag, frag_symlabels_each_sfo)
+    # the returned data is a dictionary with {property: {spin: {irrep: [data]}}} with property being either "orb_energies" or "occupations" and spin being either "A" or "B" (see `SpinTypes`)
+    data_dic_to_be_unpacked = get_fragment_properties(kf_file, frag_index)
+    data_dic_to_be_unpacked = {key: value[SpinTypes.A] for key, value in data_dic_to_be_unpacked.items()}  # Here we want to get rid of the spin key because restricted fragments don't have spin
 
     # Gross populations is special due to the frozen cores, so we have to do some extra work here
+    data_dic_to_be_unpacked["gross_populations"] = get_gross_populations(kf_file, frag_index)[SpinTypes.A]
+
+    new_fragment_data = RestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked)
+    return new_fragment_data
+
+
+def _create_unrestricted_fragment_data(kf_file: KFFile, frag_index: int):
+    data_dic_to_be_unpacked = {}
+
+    # Get the fragment name
+    frag_name = get_frag_name(kf_file, frag_index)
+
+    n_frozen_cores_per_irrep = get_frozen_cores_per_irrep(kf_file, frag_index)
+
+    data_dic_to_be_unpacked = get_fragment_properties(kf_file, frag_index)
+
     data_dic_to_be_unpacked["gross_populations"] = get_gross_populations(kf_file, frag_index)
 
-    new_fragment_data = FragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked)
+    new_fragment_data = UnrestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked)
     return new_fragment_data
 
 
@@ -55,9 +65,9 @@ class FragmentData(ABC):
     """
     name: str
     frag_index: int  # 1 or 2
-    orb_energies: dict[str, Array1D[np.float64]]
-    occupations: dict[str, Array1D[np.float64]]
-    gross_populations: dict[str, Array1D[np.float64]]
+    orb_energies: RestrictedProperty
+    occupations: RestrictedProperty
+    gross_populations: RestrictedProperty
     n_frozen_cores_per_irrep: dict[str, int]
 
 
@@ -115,6 +125,27 @@ class UnrestrictedFragmentData(FragmentData):
 
         The frozen cores per irrep format remains the same
     """
-    orb_energies: dict[str, dict[str, Array1D[np.float64]]]
-    gross_populations: dict[str, dict[str, Array1D[np.float64]]]
-    n_frozen_cores_per_irrep: dict[str, dict[str, int]]
+    orb_energies: UnrestrictedProperty
+    gross_populations: UnrestrictedProperty
+    occupations: UnrestrictedProperty
+
+
+def main():
+    import pathlib as pl
+    from pprint import pprint
+
+    current_dir = pl.Path(__file__).parent
+    rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs"
+    # rkf_file = 'restricted_largecore_differentfragsym_c4v_full.adf.rkf'
+    rkf_file = 'unrestricted_largecore_fragsym_c3v_full.adf.rkf'
+    kf_file = KFFile(str(rkf_dir / rkf_file))
+
+    data = create_fragment_data(restricted_frag=False, frag_index=1, kf_file=kf_file)
+    pprint(data)
+
+    # grospop = get_gross_populations(kf_file, frag_index=2)
+    # print(grospop)
+
+
+if __name__ == "__main__":
+    main()

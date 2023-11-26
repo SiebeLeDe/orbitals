@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from orb_analysis.fa_calc.complex import create_calc_analyser
+from orb_analysis.analyzer.calc_analyzer import create_calc_analyser
 
 np.set_printoptions(precision=5, suppress=True)
 # https://www.scm.com/doc/ADF/Appendices/TAPE21.html
@@ -96,7 +96,7 @@ overlap = np.array([
     for label1 in frag1_labels
 ])
 
-plt.imshow(overlap, cmap="rainbow", interpolation="nearest", alpha=0.5)
+plt.imshow(overlap, cmap="coolwarm", interpolation="nearest", alpha=0.5)
 plt.colorbar()
 plt.xticks(np.arange(len(frag1_labels)), frag1_labels)
 plt.yticks(np.arange(len(frag2_labels)), frag2_labels)
