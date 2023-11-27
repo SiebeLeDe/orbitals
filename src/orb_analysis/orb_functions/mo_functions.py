@@ -130,11 +130,11 @@ def get_complex_properties(kf_file: KFFile, restricted: bool = True) -> Unrestri
 
     data_dic_to_be_unpacked: dict[str, dict[str, dict[str, Array1D[np.float64]]]] = {}
 
-    for spin in spin_states:
-        data_dic_to_be_unpacked[spin] = {}
-        for property, func in KEY_FUNC_MAPPING.items():
+    for property, func in KEY_FUNC_MAPPING.items():
+        data_dic_to_be_unpacked[property] = {}
+        for spin in spin_states:
             irrep_property_dic = {irrep: func(kf_file, irrep, spin) for irrep in irreps}
-            data_dic_to_be_unpacked[spin][property] = irrep_property_dic
+            data_dic_to_be_unpacked[property][spin] = irrep_property_dic
 
     return data_dic_to_be_unpacked
 

@@ -10,7 +10,7 @@ import pathlib as pl
 import attrs
 from scm.plams import KFFile
 
-from orb_analysis.fragment.fragment import Fragment, create_fragment
+from orb_analysis.fragment.fragment import Fragment, RestrictedFragment, UnrestrictedFragment, create_restricted_fragment, create_unrestricted_fragment
 from orb_analysis.complex.complex import Complex, create_complex
 
 from orb_analysis.sfo.sfo import SFO
@@ -42,11 +42,12 @@ def create_calc_analyser(path_to_rkf_file: str | pl.Path, n_fragments: int = 2) 
     name = path_to_rkf_file.parent.name
     calc_info = CalcInfo(kf_file=kf_file)
     complex = create_complex(name=name, kf_file=kf_file, restricted_calc=calc_info.restricted)
-    fragments = [create_fragment(kf_file=kf_file, frag_index=i+1, restricted_calc=calc_info.restricted) for i in range(n_fragments)]
 
     if calc_info.restricted:
+        fragments = [create_restricted_fragment(kf_file=kf_file, frag_index=i+1,) for i in range(n_fragments)]
         return RestrictedCalcAnalyser(name=name, kf_file=kf_file, calc_info=calc_info, complex=complex, fragments=fragments)
 
+    fragments = [create_unrestricted_fragment(kf_file=kf_file, frag_index=i+1) for i in range(n_fragments)]
     return UnrestrictedCalcAnalyser(name=name, kf_file=kf_file, calc_info=calc_info, complex=complex, fragments=fragments)
 
 
@@ -102,10 +103,12 @@ class CalcAnalyzer(ABC):
         pass
 
 
+@attrs.define
 class RestrictedCalcAnalyser(CalcAnalyzer):
     """
     This class contains information about the complex calculation.
     """
+    fragments: Sequence[RestrictedFragment] = attrs.field(default=list)
 
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO):
 
@@ -117,44 +120,66 @@ class RestrictedCalcAnalyser(CalcAnalyzer):
 
         return self.fragments[0].get_overlap(
             kf_file=self.kf_file,
-            symmetry=self.calc_info.symmetry,
-            irrep1=sfo1.symmetry,
+            uses_symmetry=self.calc_info.symmetry,
+            irrep1=sfo1.irrep,
             index1=sfo1.index,
-            irrep2=sfo2.symmetry,
+            irrep2=sfo2.irrep,
             index2=sfo2.index)
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
-        if not isinstance(sfo, SFO):
-            sfo = SFO.from_label(sfo)
+        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
 
         if not self.calc_info.symmetry:
             return self.fragments[fragment-1].get_gross_population(irrep="A", index=sfo.index)
-        return self.fragments[fragment-1].get_gross_population(irrep=sfo.symmetry, index=sfo.index)
+        return self.fragments[fragment-1].get_gross_population(irrep=sfo.irrep, index=sfo.index)
 
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO):
-        if not isinstance(sfo, SFO):
-            sfo = SFO.from_label(sfo)
-        return self.fragments[fragment-1].get_orbital_energy(irrep=sfo.symmetry, index=sfo.index)
+        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
+        return self.fragments[fragment-1].get_orbital_energy(irrep=sfo.irrep, index=sfo.index)
 
     def get_sfo_occupation(self, fragment: int, sfo: str | SFO):
-        if not isinstance(sfo, SFO):
-            sfo = SFO.from_label(sfo)
-        return self.fragments[fragment-1].get_occupation(irrep=sfo.symmetry, index=sfo.index)
+        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
+        return self.fragments[fragment-1].get_occupation(irrep=sfo.irrep, index=sfo.index)
 
 
+@attrs.define
 class UnrestrictedCalcAnalyser(CalcAnalyzer):
     """
     This class contains information about the complex calculation.
     """
+    fragments: Sequence[UnrestrictedFragment] = attrs.field(default=list)
 
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO):
-        raise NotImplementedError
+
+        sfo1 = SFO.from_label(sfo1) if isinstance(sfo1, str) else sfo1
+        sfo2 = SFO.from_label(sfo2) if isinstance(sfo2, str) else sfo2
+
+        if sfo1.spin != sfo2.spin:
+            return 0.0
+
+        return self.fragments[0].get_overlap(
+            kf_file=self.kf_file,
+            uses_symmetry=self.calc_info.symmetry,
+            irrep1=sfo1.irrep,
+            index1=sfo1.index,
+            irrep2=sfo2.irrep,
+            index2=sfo2.index,
+            spin=sfo1.spin)
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
-        raise NotImplementedError
+        """ Function that returns the gross population of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" or SFO object."""
+        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
+
+        if not self.calc_info.symmetry:
+            return self.fragments[fragment-1].get_gross_population(irrep="A", index=sfo.index, spin=sfo.spin)
+        return self.fragments[fragment-1].get_gross_population(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
 
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO):
-        raise NotImplementedError
+        """ Function that returns the orbital energy of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" or SFO object."""
+        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
+        return self.fragments[fragment-1].get_orbital_energy(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
 
     def get_sfo_occupation(self, fragment: int, sfo: str | SFO):
-        raise NotImplementedError
+        """ Function that returns the occupation of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" or SFO object."""
+        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
+        return self.fragments[fragment-1].get_occupation(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)

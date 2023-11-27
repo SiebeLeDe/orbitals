@@ -7,22 +7,27 @@ from functools import lru_cache
 import attrs
 import numpy as np
 from scm.plams import KFFile
+from orb_analysis.custom_types import SpinTypes
 
-from orb_analysis.fragment.fragmentdata import FragmentData, create_fragment_data
+from orb_analysis.fragment.fragmentdata import FragmentData, create_fragment_data, RestrictedFragmentData, UnrestrictedFragmentData
 
 
 # --------------------Interface Function(s)-------------------- #
 
-def create_fragment(frag_index: int, kf_file: KFFile, restricted_calc: bool):
+def create_restricted_fragment(frag_index: int, kf_file: KFFile):
     """
     Creates a fragment object from the kf_file. The type of fragment object depends on the calculation type (restricted or unrestricted).
     """
-    fragment_data = create_fragment_data(restricted_calc, frag_index, kf_file)
+    fragment_data = create_fragment_data(True, frag_index, kf_file)
+    return RestrictedFragment(fragment_data)
 
-    if restricted_calc:
-        return RestrictedFragment(fragment_data)
-    else:
-        return UnrestrictedFragment(fragment_data)
+
+def create_unrestricted_fragment(frag_index: int, kf_file: KFFile):
+    """
+    Creates a fragment object from the kf_file. The type of fragment object depends on the calculation type (restricted or unrestricted).
+    """
+    fragment_data = create_fragment_data(False, frag_index, kf_file)
+    return UnrestrictedFragment(fragment_data)
 
 
 # ------------------- Helper Functions -------------------- #
@@ -38,7 +43,7 @@ def get_overlap_matrix(kf_file: KFFile, irrep: str):
 
 
 @lru_cache(maxsize=2)
-def get_frag_sfo_index_mapping_to_total_sfo_index(kf_file: KFFile, frozen_cores_per_irrep_tuple: tuple[str, int], use_symmetry: bool) -> dict[int, dict[str, list[int]]]:
+def get_frag_sfo_index_mapping_to_total_sfo_index(kf_file: KFFile, frozen_cores_per_irrep_tuple: tuple[str, int], use_uses_symmetry: bool) -> dict[int, dict[str, list[int]]]:
     """
     Function that creates a mapping (in the form of a nested dictionary) between the SFO indices of the fragments and the total SFO indices.
     The dict looks like this for a c3v calculation with two fragments:
@@ -68,8 +73,8 @@ def get_frag_sfo_index_mapping_to_total_sfo_index(kf_file: KFFile, frozen_cores_
 
     mapping_dict = {}
 
-    # if the calculation did not use symmetry, we can skip the symmetry part
-    if not use_symmetry:
+    # if the calculation did not use uses_symmetry, we can skip the uses_symmetry part
+    if not use_uses_symmetry:
         for sfo_index, frag_index in zip(sfo_indices, frag_indices):
             if frag_index not in mapping_dict:
                 mapping_dict[frag_index] = {"A": []}
@@ -107,7 +112,7 @@ class Fragment(ABC):
         return self.fragment_data.name
 
     @abstractmethod
-    def get_overlap(self, symmetry: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int) -> float:
+    def get_overlap(self, irrep: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int) -> float:
         """ Returns the overlap between two orbitals in a.u. """
         pass
 
@@ -127,10 +132,11 @@ class Fragment(ABC):
 
 
 class RestrictedFragment(Fragment):
+    fragment_data: RestrictedFragmentData
 
-    def get_overlap(self, symmetry: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int):
+    def get_overlap(self, uses_symmetry: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int):
 
-        if not symmetry:
+        if not uses_symmetry:
             irrep1 = "A"
             irrep2 = "A"
 
@@ -138,7 +144,7 @@ class RestrictedFragment(Fragment):
         # index = max_index * (max_index - 1) // 2 + min_index - 1
 
         frozen_cores_per_irrep = tuple(sorted(self.fragment_data.n_frozen_cores_per_irrep.items()))
-        index_mapping = get_frag_sfo_index_mapping_to_total_sfo_index(kf_file, frozen_cores_per_irrep, symmetry)
+        index_mapping = get_frag_sfo_index_mapping_to_total_sfo_index(kf_file, frozen_cores_per_irrep, uses_symmetry)
         index1 = index_mapping[1][irrep1][index1-1]
         index2 = index_mapping[2][irrep2][index2-1]
 
@@ -158,14 +164,32 @@ class RestrictedFragment(Fragment):
 
 
 class UnrestrictedFragment(Fragment):
-    def get_overlap(self, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int):
-        raise NotImplementedError("Unrestricted fragments are currently not supported.")
+    fragment_data: UnrestrictedFragmentData
 
-    def get_orbital_energy(self, irrep: str, index: int):
-        raise NotImplementedError("Unrestricted fragments are currently not supported.")
+    def get_overlap(self, uses_symmetry: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int, spin: str):
+        if not uses_symmetry:
+            irrep1 = "A"
+            irrep2 = "A"
 
-    def get_gross_population(self, irrep: str, index: int):
-        raise NotImplementedError("Unrestricted fragments are currently not supported.")
+        # Note: the overlap matrix is stored in the rkf file as a lower triangular matrix. Thus, the index is calculated as follows:
+        # index = max_index * (max_index - 1) // 2 + min_index - 1
 
-    def get_occupation(self, irrep: str, index: int):
-        raise NotImplementedError("Unrestricted fragments are currently not supported.")
+        frozen_cores_per_irrep = tuple(sorted(self.fragment_data.n_frozen_cores_per_irrep.items()))
+        index_mapping = get_frag_sfo_index_mapping_to_total_sfo_index(kf_file, frozen_cores_per_irrep, uses_symmetry)
+        index1 = index_mapping[1][irrep1][index1-1]
+        index2 = index_mapping[2][irrep2][index2-1]
+
+        min_index, max_index = sorted([index1, index2])
+        overlap_index = max_index * (max_index - 1) // 2 + min_index - 1
+        variable = f"S-CoreSFO_{spin}" if spin == SpinTypes.B else "S-CoreSFO"
+        overlap_matrix = np.array(kf_file.read(irrep1, variable))  # type: ignore
+        return abs(overlap_matrix[overlap_index])
+
+    def get_orbital_energy(self, irrep: str, index: int, spin: str):
+        return self.fragment_data.orb_energies[spin][irrep][index-1]
+
+    def get_gross_population(self, irrep: str, index: int, spin: str):
+        return self.fragment_data.gross_populations[spin][irrep][index-1]
+
+    def get_occupation(self, irrep: str, index: int, spin: str):
+        return self.fragment_data.occupations[spin][irrep][index-1]

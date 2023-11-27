@@ -4,9 +4,8 @@ Module containing classes that stores information of the complex calculation in 
 from __future__ import annotations
 from scm.plams import KFFile
 import attrs
-import numpy as np
 from orb_analysis.orb_functions.mo_functions import get_frozen_cores_per_irrep, get_complex_properties
-from orb_analysis.custom_types import Array1D
+from orb_analysis.custom_types import RestrictedProperty, SpinTypes, UnrestrictedProperty
 
 
 # --------------------Interface Function(s)-------------------- #
@@ -27,7 +26,8 @@ def create_complex_data(name: str, kf_file: KFFile, restricted_calc: bool) -> Co
     n_frozen_cores_per_irrep = get_frozen_cores_per_irrep(kf_file)
 
     if restricted_calc:
-        return RestrictedComplexData(name=name, **data_to_be_unpacked["A"], n_frozen_cores_per_irrep=n_frozen_cores_per_irrep)
+        data_to_be_unpacked = {key: value[SpinTypes.A] for key, value in data_to_be_unpacked.items()}  # Here we want to get rid of the spin key because restricted fragments don't have spin
+        return RestrictedComplexData(name=name, **data_to_be_unpacked, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep)
 
     return UnrestrictedComplexData(name=name, **data_to_be_unpacked, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep)
 
@@ -46,8 +46,8 @@ class ComplexData:
     See the specific :Complex: classes for more information about the format of data stored in the dictionaries.
     """
     name: str
-    orb_energies: dict[str, Array1D[np.float64]]
-    occupations: dict[str, Array1D[np.float64]]
+    orb_energies: RestrictedProperty
+    occupations: RestrictedProperty
     n_frozen_cores_per_irrep: dict[str, int]
 
 
@@ -85,6 +85,6 @@ class UnrestrictedComplexData(ComplexData):
         - Number of frozen cores per irrep: {"IRREP1": n_frozen_cores, "IRREP2": n_frozen_cores, ...}
     """
     name: str
-    orb_energies: dict[str, dict[str, Array1D[np.float64]]]
-    occupations: dict[str, dict[str, Array1D[np.float64]]]
+    orb_energies: UnrestrictedProperty
+    occupations: UnrestrictedProperty
     n_frozen_cores_per_irrep: dict[str, int]

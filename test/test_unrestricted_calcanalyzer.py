@@ -1,68 +1,68 @@
-# """
-# Testmodule that tests (with pytest) the most high-level functionality of the package, being the CalcAnalyzer class.
-# The following types of calculations are tested:
-#     - unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation
-#     - unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation
-#     - unrestricted, no frozen core, fragment symmetry, no symmetry calculation
-#     - non-relativistic, unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation
+"""
+Testmodule that tests (with pytest) the most high-level functionality of the package, being the CalcAnalyzer class.
+The following types of calculations are tested:
+    - unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation
+    - unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation
+    - unrestricted, no frozen core, fragment symmetry, no symmetry calculation
+    - non-relativistic, unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation
 
-# For all of these calculations, the following methods are tested:
-#     - get_sfo_orbital_energy
-#     - get_sfo_gross_population
-#     - get_sfo_overlap
+For all of these calculations, the following methods are tested:
+    - get_sfo_orbital_energy
+    - get_sfo_gross_population
+    - get_sfo_overlap
 
-# The tests are based on the calculations with the molecule Me3Ge-H + H-CCl3 (heavier derivative of Me3C-H + H-CCl3) in C3v symmetry.
-# Note: this module only contains unrestricted calculations.
-# """
-# import pathlib as pl
+The tests are based on the calculations with the molecule Me3Ge-H + H-CCl3 (heavier derivative of Me3C-H + H-CCl3) in C3v symmetry.
+Note: this module only contains unrestricted calculations.
+"""
+import pathlib as pl
 
-# import pytest
-# from orb_analysis.fa_calc.complex import FACalcAnalyser, create_calc_analyser
+import pytest
+from orb_analysis.analyzer.calc_analyzer import CalcAnalyzer, create_calc_analyser
 
-# current_dir = pl.Path(__file__).parent
-# fixtures_dir = current_dir / "fixtures" / "rkfs"
-
-
-# @pytest.fixture()
-# def calc_analyzer_unrestricted_nocore_fragsym_c3v() -> FACalcAnalyser:
-#     """Returns a CalcAnalyzer instance of a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
-#     rkf_path = fixtures_dir / 'unrestricted_nocore_fragsym_c3v_full.adf.rkf'
-#     return create_calc_analyser(rkf_path)
+current_dir = pl.Path(__file__).parent
+fixtures_dir = current_dir / "fixtures" / "rkfs"
 
 
-# @pytest.fixture()
-# def calc_analyzer_unrestricted_largecore_fragsym_c3v() -> FACalcAnalyser:
-#     """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
-#     rkf_path = fixtures_dir / 'unrestricted_largecore_fragsym_c3v_full.adf.rkf'
-#     return create_calc_analyser(rkf_path)
+@pytest.fixture()
+def calc_analyzer_unrestricted_nocore_fragsym_c3v() -> CalcAnalyzer:
+    """Returns a CalcAnalyzer instance of a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    rkf_path = fixtures_dir / 'unrestricted_nocore_fragsym_c3v_full.adf.rkf'
+    return create_calc_analyser(rkf_path)
 
 
-# @pytest.fixture()
-# def calc_analyzer_unrestricted_nocore_fragsym_nosym() -> FACalcAnalyser:
-#     """Returns a CalcAnalyzer instance of a unrestricted, no frozen core, fragment symmetry, no symmetry calculation."""
-#     rkf_path = fixtures_dir / 'unrestricted_nocore_fragsym_nosym_full.adf.rkf'
-#     return create_calc_analyser(rkf_path)
+@pytest.fixture()
+def calc_analyzer_unrestricted_largecore_fragsym_c3v() -> CalcAnalyzer:
+    """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    rkf_path = fixtures_dir / 'unrestricted_largecore_fragsym_c3v_full.adf.rkf'
+    return create_calc_analyser(rkf_path)
 
 
-# @pytest.fixture()
-# def calc_analyzer_non_relativistic() -> FACalcAnalyser:
-#     """Returns a CalcAnalyzer instance of a non-relativistic, unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
-#     rkf_path = fixtures_dir / 'unrestricted_largecore_fragsym_c3v_nonrelativistic_full.adf.rkf'
-#     return create_calc_analyser(rkf_path)
+@pytest.fixture()
+def calc_analyzer_unrestricted_nocore_fragsym_nosym() -> CalcAnalyzer:
+    """Returns a CalcAnalyzer instance of a unrestricted, no frozen core, fragment symmetry, no symmetry calculation."""
+    rkf_path = fixtures_dir / 'unrestricted_nocore_fragsym_nosym_full.adf.rkf'
+    return create_calc_analyser(rkf_path)
 
 
-# @pytest.fixture()
-# def calc_analyzer_unrestricted_largecore_nosym() -> FACalcAnalyser:
-#     """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, no fragment symmetry, no symmetry calculation."""
-#     rkf_path = fixtures_dir / 'unrestricted_largecore_nofragsym_nosym_full.adf.rkf'
-#     return create_calc_analyser(rkf_path)
+@pytest.fixture()
+def calc_analyzer_non_relativistic() -> CalcAnalyzer:
+    """Returns a CalcAnalyzer instance of a non-relativistic, unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    rkf_path = fixtures_dir / 'unrestricted_largecore_fragsym_c3v_nonrelativistic_full.adf.rkf'
+    return create_calc_analyser(rkf_path)
 
 
-# @pytest.fixture()
-# def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> FACalcAnalyser:
-#     """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, different fragment symmetry (Clin + C4v), c4v complex symmetry calculation."""
-#     rkf_path = fixtures_dir / 'unrestricted_largecore_differentfragsym_c4v_full.adf.rkf'
-#     return create_calc_analyser(rkf_path)
+@pytest.fixture()
+def calc_analyzer_unrestricted_largecore_nosym() -> CalcAnalyzer:
+    """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, no fragment symmetry, no symmetry calculation."""
+    rkf_path = fixtures_dir / 'unrestricted_largecore_nofragsym_nosym_full.adf.rkf'
+    return create_calc_analyser(rkf_path)
+
+
+@pytest.fixture()
+def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
+    """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, different fragment symmetry (Clin + C4v), c4v complex symmetry calculation."""
+    rkf_path = fixtures_dir / 'unrestricted_largecore_differentfragsym_c4v_full.adf.rkf'
+    return create_calc_analyser(rkf_path)
 
 
 # # ------------------------------------------------------------
