@@ -2,7 +2,7 @@
 import attrs
 from orb_analysis.custom_types import RestrictedProperty, UnrestrictedProperty, SpinTypes
 from scm.plams import KFFile
-from orb_analysis.orb_functions.sfo_functions import get_frozen_cores_per_irrep, get_gross_populations, get_fragment_properties, get_frag_name
+from orb_analysis.orb_functions.sfo_functions import get_frozen_cores_per_irrep, get_gross_populations, get_fragment_properties, get_frag_name, get_ordered_irreps_of_one_frag
 
 
 def create_fragment_data(restricted_frag: bool, frag_index: int, kf_file: KFFile):
@@ -32,7 +32,9 @@ def _create_restricted_fragment_data(kf_file: KFFile, frag_index: int):
     # Gross populations is special due to the frozen cores, so we have to do some extra work here
     data_dic_to_be_unpacked["gross_populations"] = get_gross_populations(kf_file, frag_index)[SpinTypes.A]
 
-    new_fragment_data = RestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked)
+    frag_irreps = get_ordered_irreps_of_one_frag(kf_file, frag_index)
+
+    new_fragment_data = RestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked, frag_irreps=frag_irreps)
     return new_fragment_data
 
 
@@ -48,7 +50,9 @@ def _create_unrestricted_fragment_data(kf_file: KFFile, frag_index: int):
 
     data_dic_to_be_unpacked["gross_populations"] = get_gross_populations(kf_file, frag_index)
 
-    new_fragment_data = UnrestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked)
+    frag_irreps = get_ordered_irreps_of_one_frag(kf_file, frag_index)
+
+    new_fragment_data = UnrestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked, frag_irreps=frag_irreps)
     return new_fragment_data
 
 
@@ -69,6 +73,7 @@ class FragmentData(ABC):
     occupations: RestrictedProperty
     gross_populations: RestrictedProperty
     n_frozen_cores_per_irrep: dict[str, int]
+    frag_irreps: list[str]
 
 
 @attrs.define
@@ -132,16 +137,18 @@ class UnrestrictedFragmentData(FragmentData):
 
 def main():
     import pathlib as pl
-    from pprint import pprint
+    from numpy import set_printoptions
+
+    set_printoptions(precision=3, suppress=True)
 
     current_dir = pl.Path(__file__).parent
     rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs"
     # rkf_file = 'restricted_largecore_differentfragsym_c4v_full.adf.rkf'
-    rkf_file = 'unrestricted_largecore_fragsym_c3v_full.adf.rkf'
+    rkf_file = 'unrestricted_largecore_fragsym_nosym_full.adf.rkf'
     kf_file = KFFile(str(rkf_dir / rkf_file))
 
-    data = create_fragment_data(restricted_frag=False, frag_index=1, kf_file=kf_file)
-    pprint(data)
+    data = create_fragment_data(restricted_frag=False, frag_index=2, kf_file=kf_file)
+    print(data.frag_irreps)
 
     # grospop = get_gross_populations(kf_file, frag_index=2)
     # print(grospop)

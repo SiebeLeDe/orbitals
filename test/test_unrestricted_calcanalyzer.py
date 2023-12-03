@@ -65,14 +65,14 @@ def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
     return create_calc_analyser(rkf_path)
 
 
-# # ------------------------------------------------------------
-# # ------------------Orbital energy tests----------------------
-# # ------------------------------------------------------------
-# #
-# # The following tests are for the `get_sfo_orbital_energy method` for various types of calculations.
-# # The implementation is quite straightforward. Just read the ("SFO", "escale") section in the KFFile and split it by irrep
-# # There is one remark: "escale" is for relativistic calculations, "energy" is for non-relativistic calculations.
-
+# ------------------------------------------------------------
+# ------------------Orbital energy tests----------------------
+# ------------------------------------------------------------
+#
+# The following tests are for the `get_sfo_orbital_energy method` for various types of calculations.
+# The implementation is quite straightforward. Just read the ("SFO", "escale") section in the KFFile for spin A and ("SFO", "escale_B") for spin B and split it by irrep
+# There is one remark: "escale" is for relativistic calculations, "energy" is for non-relativistic calculations.
+# Energy unit in hatree.
 
 # def test_get_sfo_orbital_energy_unrestricted_nocore_fragsym_c3v(calc_analyzer_unrestricted_nocore_fragsym_c3v):
 #     """ Tests the `get_sfo_orbital_energy` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation ."""
@@ -92,25 +92,40 @@ def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
 #     assert frag2_energy == pytest.approx(-0.306534, abs=1e-3)
 
 
-# def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-#     """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
-#     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
-#     frag1_energy = analyzer.get_sfo_orbital_energy(1, "2_A1")
-#     frag2_energy = analyzer.get_sfo_orbital_energy(2, "4_A1")
-#     assert frag1_energy == pytest.approx(-0.238999, abs=1e-3)
-#     assert frag2_energy == pytest.approx(-0.02899, abs=1e-3)
+def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v(calc_analyzer_unrestricted_largecore_fragsym_c3v):
+    """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
+    analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
+    frag1_energy_A = analyzer.get_sfo_orbital_energy(1, "4_A1_A")
+    frag2_energy_A = analyzer.get_sfo_orbital_energy(2, "4_A1_A")
+    frag1_energy_B = analyzer.get_sfo_orbital_energy(1, "4_A1_B")
+    frag2_energy_B = analyzer.get_sfo_orbital_energy(2, "4_A1_B")
+    assert frag1_energy_A == pytest.approx(-0.139055, abs=1e-3)
+    assert frag2_energy_A == pytest.approx(-0.185624, abs=1e-3)
+    assert frag1_energy_B == pytest.approx(-0.100877, abs=1e-3)
+    assert frag2_energy_B == pytest.approx(-0.264420, abs=1e-3)
 
 
-# def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v_degenerate(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-#     """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
-#     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
-#     frag1_energy = analyzer.get_sfo_orbital_energy(1, "1_E1:1")
-#     frag2_energy = analyzer.get_sfo_orbital_energy(2, "1_E1:1")
-#     assert frag1_energy == pytest.approx(-0.332368, abs=1e-3)
-#     assert frag2_energy == pytest.approx(-0.783148, abs=1e-3)
+def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v_degenerate(calc_analyzer_unrestricted_largecore_fragsym_c3v):
+    """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
+    analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
+    frag1_energy_A1 = analyzer.get_sfo_orbital_energy(1, "5_E1:1_A")
+    frag1_energy_A2 = analyzer.get_sfo_orbital_energy(1, "5_E1:2_A")
+    frag2_energy_A1 = analyzer.get_sfo_orbital_energy(2, "5_E1:1_A")
+    frag2_energy_A2 = analyzer.get_sfo_orbital_energy(2, "5_E1:2_A")
+    frag1_energy_B1 = analyzer.get_sfo_orbital_energy(1, "5_E1:1_B")
+    frag1_energy_B2 = analyzer.get_sfo_orbital_energy(1, "5_E1:2_B")
+    frag2_energy_B1 = analyzer.get_sfo_orbital_energy(2, "5_E1:1_B")
+    frag2_energy_B2 = analyzer.get_sfo_orbital_energy(2, "5_E1:2_B")
+    assert frag1_energy_A1 == pytest.approx(0.011922, abs=1e-3)
+    assert frag1_energy_A2 == pytest.approx(0.011922, abs=1e-3)
+    assert frag2_energy_A1 == pytest.approx(0.053380, abs=1e-3)
+    assert frag2_energy_A2 == pytest.approx(0.053380, abs=1e-3)
+    assert frag1_energy_B1 == pytest.approx(0.013414, abs=1e-3)
+    assert frag1_energy_B2 == pytest.approx(0.013414, abs=1e-3)
+    assert frag2_energy_B1 == pytest.approx(0.046461, abs=1e-3)
+    assert frag2_energy_B2 == pytest.approx(0.046461, abs=1e-3)
 
 
-# # Add tests for unrestricted_nocore_fragsym_nosym
 # def test_get_sfo_orbital_energy_unrestricted_nocore_fragsym_nosym(calc_analyzer_unrestricted_nocore_fragsym_nosym):
 #     """ Tests the `get_sfo_orbital_energy` method for a unrestricted, no frozen core, fragment symmetry, no symmetry calculation ."""
 #     analyzer = calc_analyzer_unrestricted_nocore_fragsym_nosym
@@ -138,14 +153,14 @@ def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
 #     assert frag2_energy == pytest.approx(-0.028899, abs=1e-3)
 
 
-# # NOT WORKING YET
-# # def test_get_sfo_orbital_energy_unrestricted_largecore_differentfragsym_c4v(calc_analyzer_unrestricted_largecore_differentfragsym_c4v):
-# #     """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, different fragment symmetry (Clin + C4v), c4v complex symmetry calculation ."""
-# #     analyzer = calc_analyzer_unrestricted_largecore_differentfragsym_c4v
-# #     frag1_energy = analyzer.get_sfo_orbital_energy(1, "2_SIGMA")
-# #     frag2_energy = analyzer.get_sfo_orbital_energy(2, "5_A2")
-# #     assert frag1_energy == pytest.approx(-0.513043, abs=1e-3)
-# #     assert frag2_energy == pytest.approx(-0.510990, abs=1e-3)
+# NOT WORKING YET
+# def test_get_sfo_orbital_energy_unrestricted_largecore_differentfragsym_c4v(calc_analyzer_unrestricted_largecore_differentfragsym_c4v):
+#     """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, different fragment symmetry (Clin + C4v), c4v complex symmetry calculation ."""
+#     analyzer = calc_analyzer_unrestricted_largecore_differentfragsym_c4v
+#     frag1_energy = analyzer.get_sfo_orbital_energy(1, "2_SIGMA")
+#     frag2_energy = analyzer.get_sfo_orbital_energy(2, "5_A2")
+#     assert frag1_energy == pytest.approx(-0.513043, abs=1e-3)
+#     assert frag2_energy == pytest.approx(-0.510990, abs=1e-3)
 
 # # ------------------------------------------------------------
 # # ------------------Gross population tests--------------------
@@ -172,26 +187,39 @@ def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
 #     assert frag2_pop == pytest.approx(1.975, abs=1e-3)
 
 
-# def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-#     """ Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
-#     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
-#     frag1_pop = analyzer.get_sfo_gross_population(1, "2_A1")
-#     frag2_pop = analyzer.get_sfo_gross_population(2, "4_A1")
-#     assert frag1_pop == pytest.approx(1.810, abs=1e-3)
-#     assert frag2_pop == pytest.approx(0.177, abs=1e-3)
+def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v(calc_analyzer_unrestricted_largecore_fragsym_c3v):
+    """ Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
+    frag1_pop_A = analyzer.get_sfo_gross_population(1, "4_A1_A")
+    frag2_pop_A = analyzer.get_sfo_gross_population(2, "4_A1_A")
+    frag1_pop_B = analyzer.get_sfo_gross_population(1, "4_A1_B")
+    frag2_pop_B = analyzer.get_sfo_gross_population(2, "4_A1_B")
+    assert frag1_pop_A == pytest.approx(0.408, abs=1e-3)
+    assert frag2_pop_A == pytest.approx(0.607, abs=1e-3)
+    # Check the value below with the value in the rkf file
+    assert frag1_pop_B == pytest.approx(0.380, abs=1e-3)
+    assert frag2_pop_B == pytest.approx(0.663, abs=1e-3)
 
 
-# def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v_degenerate(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-#     """ Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
-#     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
-#     frag1_pop_1 = analyzer.get_sfo_gross_population(1, "1_E1:1")
-#     frag1_pop_2 = analyzer.get_sfo_gross_population(1, "1_E1:2")
-#     frag2_pop_1 = analyzer.get_sfo_gross_population(2, "1_E1:1")
-#     frag2_pop_2 = analyzer.get_sfo_gross_population(2, "1_E1:2")
-#     assert frag1_pop_1 == pytest.approx(frag1_pop_2, abs=1e-3)
-#     assert frag2_pop_1 == pytest.approx(frag2_pop_2, abs=1e-3)
-#     assert frag1_pop_1 == pytest.approx(1.990, abs=1e-3)
-#     assert frag2_pop_1 == pytest.approx(2.000, abs=1e-3)
+def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v_degenerate(calc_analyzer_unrestricted_largecore_fragsym_c3v):
+    """ Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
+    frag1_pop_1A = analyzer.get_sfo_gross_population(1, "5_E1:1_A")
+    frag1_pop_2A = analyzer.get_sfo_gross_population(1, "5_E1:2_A")
+    frag2_pop_1A = analyzer.get_sfo_gross_population(2, "5_E1:1_A")
+    frag2_pop_2A = analyzer.get_sfo_gross_population(2, "5_E1:2_A")
+    frag1_pop_1B = analyzer.get_sfo_gross_population(1, "5_E1:1_B")
+    frag1_pop_2B = analyzer.get_sfo_gross_population(1, "5_E1:2_B")
+    frag2_pop_1B = analyzer.get_sfo_gross_population(2, "5_E1:1_B")
+    frag2_pop_2B = analyzer.get_sfo_gross_population(2, "5_E1:2_B")
+    assert frag1_pop_1A == pytest.approx(frag1_pop_2A, abs=1e-3)
+    assert frag2_pop_1A == pytest.approx(frag2_pop_2A, abs=1e-3)
+    assert frag1_pop_1A == pytest.approx(0.003, abs=1e-3)
+    assert frag2_pop_1A == pytest.approx(0.003, abs=1e-3)
+    assert frag1_pop_1B == pytest.approx(frag1_pop_2B, abs=1e-3)
+    assert frag2_pop_1B == pytest.approx(frag2_pop_2B, abs=1e-3)
+    assert frag1_pop_1B == pytest.approx(0.002, abs=1e-3)
+    assert frag2_pop_1B == pytest.approx(0.004, abs=1e-3)
 
 
 # def test_get_sfo_gross_population_unrestricted_nocore_fragsym_nosym(calc_analyzer_unrestricted_nocore_fragsym_nosym):
@@ -254,20 +282,26 @@ def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
 #     assert homo_homo_overlap == pytest.approx(0.2384, abs=1e-3)
 
 
-# def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A1(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-#     """ Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
-#     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
-#     homo_lumo_overlap = analyzer.get_sfo_overlap("2_A1", "4_A1")
-#     homo_homo_overlap = analyzer.get_sfo_overlap("2_A1", "3_A1")
-#     assert homo_lumo_overlap == pytest.approx(0.4093, abs=1e-3)
-#     assert homo_homo_overlap == pytest.approx(0.2497, abs=1e-3)
+def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A1(calc_analyzer_unrestricted_largecore_fragsym_c3v):
+    """ Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
+    homo_lumo_overlap_A = analyzer.get_sfo_overlap("4_A1_A", "4_A1_A")
+    homo_homo_overlap_A = analyzer.get_sfo_overlap("3_E1:1_A", "4_E1:1_A")
+    homo_lumo_overlap_B = analyzer.get_sfo_overlap("4_A1_B", "4_A1_B")
+    homo_homo_overlap_B = analyzer.get_sfo_overlap("3_E1:1_B", "4_E1:1_B")
+    assert homo_lumo_overlap_A == pytest.approx(0.4384, abs=1e-3)
+    assert homo_homo_overlap_A == pytest.approx(0.0207, abs=1e-3)
+    assert homo_lumo_overlap_B == pytest.approx(0.3751, abs=1e-3)
+    assert homo_homo_overlap_B == pytest.approx(0.0212, abs=1e-3)
 
 
-# def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A2(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-#     """ Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
-#     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
-#     homo_lumo_overlap = analyzer.get_sfo_overlap("1_A2", "4_A2")
-#     assert homo_lumo_overlap == pytest.approx(0.0490, abs=1e-4)
+def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A2(calc_analyzer_unrestricted_largecore_fragsym_c3v):
+    """ Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
+    homo_lumo_overlap_A = analyzer.get_sfo_overlap("5_A2_A", "2_A2_A")
+    homo_lumo_overlap_B = analyzer.get_sfo_overlap("5_A2_B", "2_A2_B")
+    assert homo_lumo_overlap_A == pytest.approx(0.0680, abs=1e-3)
+    assert homo_lumo_overlap_B == pytest.approx(0.0678, abs=1e-3)
 
 
 # def test_get_sfo_overlap_unrestricted_nocore_fragsym_nosym(calc_analyzer_unrestricted_nocore_fragsym_nosym):

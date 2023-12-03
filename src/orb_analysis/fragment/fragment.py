@@ -10,6 +10,8 @@ from scm.plams import KFFile
 from orb_analysis.custom_types import SpinTypes
 
 from orb_analysis.fragment.fragmentdata import FragmentData, create_fragment_data, RestrictedFragmentData, UnrestrictedFragmentData
+from orb_analysis.orb_functions.orb_functions import filter_orbitals
+from orb_analysis.orbital.orbital import SFO
 
 
 # --------------------Interface Function(s)-------------------- #
@@ -118,17 +120,22 @@ class Fragment(ABC):
 
     @abstractmethod
     def get_orbital_energy(self, irrep: str, index: int) -> float:
-        """ Returns the orbital energy """
+        """ Returns the orbital energy an active SFO """
         pass
 
     @abstractmethod
     def get_gross_population(self, irrep: str, index: int) -> float:
-        """ Returns the gross population """
+        """ Returns the gross population an active SFO """
         pass
 
     @abstractmethod
     def get_occupation(self, irrep: str, index: int) -> float:
+        """ Returns the occupation of an active SFO"""
         pass
+
+    @abstractmethod
+    def get_sfos(self, irrep: str | None = None, spin: str = SpinTypes.A) -> int:
+        """ Returns the index of the highest occupied (molecular) orbital (HOMO) of which a subset can be returned bij specifying the irrep ands spin"""
 
 
 class RestrictedFragment(Fragment):
@@ -136,13 +143,15 @@ class RestrictedFragment(Fragment):
 
     def get_overlap(self, uses_symmetry: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int):
 
+        if irrep1 != irrep2:
+            return 0.0
+
         if not uses_symmetry:
             irrep1 = "A"
             irrep2 = "A"
 
         # Note: the overlap matrix is stored in the rkf file as a lower triangular matrix. Thus, the index is calculated as follows:
         # index = max_index * (max_index - 1) // 2 + min_index - 1
-
         frozen_cores_per_irrep = tuple(sorted(self.fragment_data.n_frozen_cores_per_irrep.items()))
         index_mapping = get_frag_sfo_index_mapping_to_total_sfo_index(kf_file, frozen_cores_per_irrep, uses_symmetry)
         index1 = index_mapping[1][irrep1][index1-1]
@@ -161,6 +170,23 @@ class RestrictedFragment(Fragment):
 
     def get_occupation(self, irrep: str, index: int):
         return self.fragment_data.occupations[irrep][index-1]
+
+    def get_sfos(self, orbital_range: tuple[int, int], orb_irrep: str | None = None, spin: str | None = SpinTypes.A) -> list[SFO]:
+        max_occupied_orbitals, max_unoccupied_orbitals = orbital_range
+        irreps = [orb_irrep.upper()] if orb_irrep is not None else self.fragment_data.frag_irreps
+        sfos: list[SFO] = []
+
+        # First get the data
+        orb_energies = self.fragment_data.orb_energies
+        gross_pop = self.fragment_data.gross_populations
+        occupations = self.fragment_data.occupations
+
+        # Then, flatten the data to a list of SFOs
+        for irrep in self.fragment_data.frag_irreps:
+            for index, energy, pop, occ in zip(range(1, len(orb_energies[irrep])+1), orb_energies[irrep], gross_pop[irrep], occupations[irrep]):
+                sfos.append(SFO(index=index, irrep=irrep, spin=SpinTypes.A, energy=energy, gross_pop=pop, occupation=occ))
+
+        return filter_orbitals(sfos, max_occupied_orbitals, max_unoccupied_orbitals, irreps)
 
 
 class UnrestrictedFragment(Fragment):
@@ -193,3 +219,6 @@ class UnrestrictedFragment(Fragment):
 
     def get_occupation(self, irrep: str, index: int, spin: str):
         return self.fragment_data.occupations[spin][irrep][index-1]
+
+    def get_sfos(self, irrep: str | None = None, spin: str = SpinTypes.A) -> int:
+        return 1

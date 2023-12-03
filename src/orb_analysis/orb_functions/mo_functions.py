@@ -20,7 +20,7 @@ that can be viewed in the KF Browser of AMS (open a "adf.rkf" file and press "ct
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Callable, Sequence
+from typing import Callable
 
 import numpy as np
 from scm.plams import KFFile
@@ -39,7 +39,7 @@ def uses_symmetry(kf_file: KFFile) -> bool:
     return True
 
 
-def get_irreps(kf_file: KFFile) -> Sequence[str]:
+def get_irreps(kf_file: KFFile) -> list[str]:
     """ Returns the ordered symlabels of *active* MOs (frozen core MOs excluded) with the symmetry for MO labeling. """
     irreps = kf_file.read("Symmetry", "symlab", return_as_list=True).split()  # type: ignore
     return irreps

@@ -1,5 +1,4 @@
 import pathlib as pl
-import matplotlib.pyplot as plt
 
 import numpy as np
 
@@ -23,9 +22,9 @@ class Restricted_TestFiles:
 current_path = pl.Path(__file__).parent
 path_to_folder_with_rkf_files = (current_path.parent / "test" / "fixtures" / "rkfs")
 # See the test/fixtures/rkfs folder for more examples
-rkf_file = Restricted_TestFiles.FILE5
+rkf_file = Restricted_TestFiles.FILE2
 path_to_rkf_file = path_to_folder_with_rkf_files / f"{rkf_file}.adf.rkf"
-
+# path_to_rkf_file = "/Users/siebeld/Desktop/fa.sh_full.adf.rkf"
 # --------------------Main-------------------- #
 calc_analyzer = create_calc_analyser(path_to_rkf_file)
 
@@ -82,22 +81,33 @@ print("MAIN FUNCTION")
 # [pprint(frag.fragment_data.orb_energies) for frag in calc_analyzer.fragments]
 
 # Print the label, energy, and population of each SFO in each fragment
-frag_counter = 1
-for frag, frag_label in zip(calc_analyzer.fragments, [frag1_labels, frag2_labels]):
-    name = frag.name
-    for sfo in frag_label:
-        orb_energy = calc_analyzer.get_sfo_orbital_energy(fragment=frag_counter, sfo=sfo)
-        gross_pop = calc_analyzer.get_sfo_gross_population(fragment=frag_counter, sfo=sfo)
-        print(f"Fragment {frag_counter}, SFO {sfo :6s}: {orb_energy :^+.4f} Ha, {gross_pop :<.5f} electrons")
-    frag_counter += 1
+# frag_counter = 1
+# for frag, frag_label in zip(calc_analyzer.fragments, [frag1_labels, frag2_labels]):
+#     name = frag.name
+#     for sfo in frag_label:
+#         orb_energy = calc_analyzer.get_sfo_orbital_energy(fragment=frag_counter, sfo=sfo)
+#         gross_pop = calc_analyzer.get_sfo_gross_population(fragment=frag_counter, sfo=sfo)
+#         print(f"Fragment {frag_counter}, SFO {sfo :6s}: {orb_energy :^+.4f} Ha, {gross_pop :<.5f} electrons")
+#     frag_counter += 1
 
-overlap = np.array([
-    [calc_analyzer.get_sfo_overlap(sfo1=label1, sfo2=label2) for label2 in frag2_labels]
-    for label1 in frag1_labels
-])
+orbs = calc_analyzer.get_sfo_orbitals(frag1_orb_range=(2, 2), frag2_orb_range=(4, 4), irrep="A1")
+print("FRAG1")
+[print(orb.amsview_label, orb.homo_lumo_label, f"{orb.energy :.4f}", f"{orb.gross_pop :.4f}") for orb in orbs.frag1_orbs]
+print("FRAG2")
+[print(orb.amsview_label, orb.homo_lumo_label, f"{orb.energy :.4f}", f"{orb.gross_pop :.4f}") for orb in orbs.frag2_orbs]
+print(orbs.get_overlap_matrix_table())
 
-plt.imshow(overlap, cmap="coolwarm", interpolation="nearest", alpha=0.5)
-plt.colorbar()
-plt.xticks(np.arange(len(frag1_labels)), frag1_labels)
-plt.yticks(np.arange(len(frag2_labels)), frag2_labels)
-plt.show()
+mos = calc_analyzer.get_mo_orbitals(orb_range=(3, 3))
+[print(orb.amsview_label, orb.homo_lumo_label, f"{orb.energy :.4f}") for orb in mos.complex_mos]
+
+print(orbs)
+# overlap = np.array([
+#     [calc_analyzer.get_sfo_overlap(sfo1=label1, sfo2=label2) for label2 in frag2_labels]
+#     for label1 in frag1_labels
+# ])
+
+# plt.imshow(overlap, cmap="coolwarm", interpolation="nearest", alpha=0.5)
+# plt.colorbar()
+# plt.xticks(np.arange(len(frag1_labels)), frag1_labels)
+# plt.yticks(np.arange(len(frag2_labels)), frag2_labels)
+# plt.show()

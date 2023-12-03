@@ -8,12 +8,14 @@ Array1D = Annotated[npt.NDArray[DType], Literal[1]]
 Array2D = Annotated[npt.NDArray[DType], Literal[2]]
 Array3D = Annotated[npt.NDArray[DType], Literal[3]]
 
-# Format: {property: {irrep: [data]}} with property being either "orb_energies" or "occupations"
+# Format: {irrep: [data]} with spin being either "A" or "B" (see `SpinTypes`)
 RestrictedProperty = TypeAlias = dict[str, Array1D[np.float64]]
+# Format: {property: {irrep: [data]}} with property being either "orb_energies" or "occupations"
 RestrictedPropertyDict = TypeAlias = dict[str, dict[str, Array1D[np.float64]]]
 
-# Format: {spin: {property: {irrep: [data]}}} with property being either "orb_energies" or "occupations" and spin being either "A" or "B" (see `SpinTypes`)
+# Format: {spin: {irrep: [data]}} with spin being either "A" or "B" (see `SpinTypes`)
 UnrestrictedProperty = TypeAlias = dict[str, dict[str, Array1D[np.float64]]]
+# Format: {property: {spin: {irrep: [data]}}} with property being either "orb_energies" or "occupations" and spin being either "A" or "B" (see `SpinTypes`)
 UnrestrictedPropertyDict = TypeAlias = dict[str, dict[str, dict[str, Array1D[np.float64]]]]
 
 

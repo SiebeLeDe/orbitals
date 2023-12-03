@@ -22,7 +22,6 @@ that can be viewed in the KF Browser of AMS (open a "adf.rkf" file and press "ct
 * Active SFOs are SFOs that are not frozen cores.
 """
 from __future__ import annotations
-from pprint import pprint
 
 from typing import Callable, Sequence
 
@@ -88,7 +87,7 @@ def get_irrep_each_sfo_one_frag(kf_file: KFFile, frag_index: int) -> Sequence[st
     return frag_symlabels_each_sfo
 
 
-def get_ordered_irreps_of_one_frag(kf_file: KFFile, frag_index: int) -> Sequence[str]:
+def get_ordered_irreps_of_one_frag(kf_file: KFFile, frag_index: int) -> list[str]:
     """ Returns the ordered irreps of *active* SFOs (frozen core SFOs excluded) belonging to one fragment. """
     sfo_frag_indices = get_sfo_indices_of_one_frag(kf_file, frag_index=frag_index)
     all_sfo_irreps: list[str] = kf_file.read("SFOs", "subspecies", return_as_list=True).split()  # type: ignore
@@ -133,12 +132,10 @@ def get_frozen_cores_per_irrep(kf_file: KFFile, frag_index: int) -> dict[str, in
 def get_orbital_energies(kf_file: KFFile, spin: str = SpinTypes.A) -> Array1D[np.float64]:
     """ Reads the orbital energies from the KFFile. """
     # escale refers energies scaled by relativistic effects (ZORA). If no relativistic effects are present, "energy" is the appropriate key.
-    variable = "escale"
-    if ("SFOs", "escale") not in kf_file:
-        variable = "energy"
+    variable = "escale" if ("SFOs", "escale") in kf_file else "energy"
 
     # It is either "escale" or "escale_B", apparently there is no "escale_A" key (same for "energy")
-    if spin == SpinTypes.B:
+    if spin == SpinTypes.B and ("SFOs", f"{variable}_{SpinTypes.B}") in kf_file:
         variable = f"{variable}_{SpinTypes.B}"
 
     # Reads the orbital energies for both fragments and selects the data for the current fragment
@@ -150,10 +147,9 @@ def get_orbital_energies(kf_file: KFFile, spin: str = SpinTypes.A) -> Array1D[np
 def get_occupations(kf_file: KFFile, spin: str = SpinTypes.A) -> Array1D[np.float64]:
     """ Reads the occupations from the KFFile. """
     # It is either "occupation" or "occupation_B", apparently there is no "occupation_A" key
-    if spin == SpinTypes.A:
-        occupations = np.array(kf_file.read("SFOs", "occupation"))  # type: ignore
-    else:
-        occupations = np.array(kf_file.read("SFOs", f"occupation_{SpinTypes.B}"))
+    occupation_key = f"occupation_{SpinTypes.B}" if spin == SpinTypes.B and ("SFOs", f"occupation_{SpinTypes.B}") in kf_file else "occupation"
+    occupations = np.array(kf_file.read("SFOs", occupation_key))  # type: ignore
+
     return occupations
 
 
@@ -199,7 +195,7 @@ def get_fragment_properties(kf_file: KFFile, frag_index: int) -> UnrestrictedPro
 
         for spin in SpinTypes:
 
-            data = func(kf_file)
+            data = func(kf_file, spin=spin)
 
             data = np.array([data[i] for i in sfo_indices_of_one_frag])
 
@@ -246,6 +242,7 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
 
     gross_pop_active_sfos = {str(spin): {irrep: np.zeros_like(frags_sfo_irrep_sums[frag_index-1][irrep], dtype=np.float64) for irrep in frags_sfo_irrep_sums[frag_index - 1]} for spin in SpinTypes}
 
+    # only works if frag1 and frag2 have the same irreps
     for spin in SpinTypes:
         raw_gross_pop_index = 0 if spin == SpinTypes.A else get_total_number_sfos(kf_file)
         for irrep in ordered_irreps:
@@ -268,25 +265,25 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
     return gross_pop_active_sfos
 
 
-def main():
-    import pathlib as pl
+# def main():
+#     import pathlib as pl
 
-    current_dir = pl.Path(__file__).parent
-    rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs"
-    # rkf_file = 'restricted_largecore_differentfragsym_c4v_full.adf.rkf'
-    rkf_file = 'restricted_largecore_fragsym_c3v_full.adf.rkf'
-    kf_file = KFFile(str(rkf_dir / rkf_file))
+#     current_dir = pl.Path(__file__).parent
+#     rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs"
+#     # rkf_file = 'restricted_largecore_differentfragsym_c4v_full.adf.rkf'
+#     rkf_file = 'unrestricted_largecore_fragsym_c3v_full.adf.rkf'
+#     kf_file = KFFile(str(rkf_dir / rkf_file))
 
-    print(get_orbital_energies(kf_file))
+    # print(get_orbital_energies(kf_file))
 
     # print(get_occupations(kf_file))
     # print(get_number_sfos_per_irrep_per_frag(kf_file, frag_index=1))
     # print(get_frag_name(kf_file, frag_index=2))
-    data = get_fragment_properties(kf_file, frag_index=1)
-    pprint(data)
-    # grospop = get_gross_populations(kf_file, frag_index=2)
+    # data = get_fragment_properties(kf_file, frag_index=1)
+    # pprint(data)
+    # grospop = get_gross_populations(kf_file, frag_index=1)
     # print(grospop)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
