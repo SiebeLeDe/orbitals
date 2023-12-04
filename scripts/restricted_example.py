@@ -10,7 +10,7 @@ np.set_printoptions(precision=5, suppress=True)
 
 # ------------------Available test files------------------ #
 class Restricted_TestFiles:
-    FILE1 = "restricted_largecore_differentfragsym_c4v_full"
+    FILE1 = "restricted_largecore_differentfragsym_c4v_full"  # Does not work and don't know how to fix it. Gross populations fail completely
     FILE2 = "restricted_largecore_fragsym_c3v_full"
     FILE3 = "restricted_largecore_fragsym_c3v_nonrelativistic_full"
     FILE4 = "restricted_largecore_nofragsym_nosym_full"
@@ -22,7 +22,7 @@ class Restricted_TestFiles:
 current_path = pl.Path(__file__).parent
 path_to_folder_with_rkf_files = (current_path.parent / "test" / "fixtures" / "rkfs")
 # See the test/fixtures/rkfs folder for more examples
-rkf_file = Restricted_TestFiles.FILE2
+rkf_file = Restricted_TestFiles.FILE6
 path_to_rkf_file = path_to_folder_with_rkf_files / f"{rkf_file}.adf.rkf"
 # path_to_rkf_file = "/Users/siebeld/Desktop/fa.sh_full.adf.rkf"
 # --------------------Main-------------------- #
@@ -96,7 +96,7 @@ kf_file = KFFile(path_to_rkf_file)
 # gross_pop2 = get_gross_populations(kf_file, frag_index=2)
 # print(gross_pop)
 
-print(calc_analyzer(orb_range=(4, 2), irrep="A1"))
+print(calc_analyzer(orb_range=(4, 2)))
 
 # overlap = np.array([
 #     [calc_analyzer.get_sfo_overlap(sfo1=label1, sfo2=label2) for label2 in frag2_labels]
