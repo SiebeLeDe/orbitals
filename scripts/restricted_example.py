@@ -3,7 +3,6 @@ import pathlib as pl
 import numpy as np
 from scm.plams import KFFile
 from orb_analysis.analyzer.calc_analyzer import create_calc_analyser
-from orb_analysis.orb_functions.sfo_functions import get_gross_populations
 
 np.set_printoptions(precision=5, suppress=True)
 # https://www.scm.com/doc/ADF/Appendices/TAPE21.html
@@ -23,7 +22,7 @@ class Restricted_TestFiles:
 current_path = pl.Path(__file__).parent
 path_to_folder_with_rkf_files = (current_path.parent / "test" / "fixtures" / "rkfs")
 # See the test/fixtures/rkfs folder for more examples
-rkf_file = Restricted_TestFiles.FILE6
+rkf_file = Restricted_TestFiles.FILE2
 path_to_rkf_file = path_to_folder_with_rkf_files / f"{rkf_file}.adf.rkf"
 # path_to_rkf_file = "/Users/siebeld/Desktop/fa.sh_full.adf.rkf"
 # --------------------Main-------------------- #
@@ -93,11 +92,11 @@ print("MAIN FUNCTION")
 
 orbs = calc_analyzer.get_sfo_orbitals(frag1_orb_range=(2, 2), frag2_orb_range=(4, 4))
 kf_file = KFFile(path_to_rkf_file)
-gross_pop = get_gross_populations(kf_file, frag_index=1)
-gross_pop2 = get_gross_populations(kf_file, frag_index=2)
-print(gross_pop)
+# gross_pop = get_gross_populations(kf_file, frag_index=1)
+# gross_pop2 = get_gross_populations(kf_file, frag_index=2)
+# print(gross_pop)
 
-print(calc_analyzer(orb_range=(4, 2)))
+print(calc_analyzer(orb_range=(4, 2), irrep="A1"))
 
 # overlap = np.array([
 #     [calc_analyzer.get_sfo_overlap(sfo1=label1, sfo2=label2) for label2 in frag2_labels]

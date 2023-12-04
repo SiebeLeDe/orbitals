@@ -16,7 +16,7 @@ from orb_analysis.custom_types import SpinTypes
 from orb_analysis.fragment.fragment import Fragment, RestrictedFragment, UnrestrictedFragment, create_restricted_fragment, create_unrestricted_fragment
 from orb_analysis.complex.complex import Complex, create_complex
 from orb_analysis.orbital_manager.orb_manager import MOManager, SFOManager
-
+from orb_analysis.log_messages import calc_analyzer_call_message
 from orb_analysis.orbital.orbital import SFO
 
 # --------------------Interface Method(s)-------------------- #
@@ -71,10 +71,8 @@ class CalcAnalyzer(ABC):
     def __call__(self, orb_range: tuple[int, int], irrep: str | None = None, spin: str = SpinTypes.A) -> str:
         sfos = self.get_sfo_orbitals(orb_range, orb_range, irrep, spin)
         mos = self.get_mo_orbitals(orb_range, irrep, spin)
-        if self.calc_info.restricted:
-            return str(sfos) + "\n\n" + str(mos)
-        note = f"This is an unrestricted calculation. The analysis is performed for {spin=}! \n"
-        return note + str(sfos) + "\n\n" + str(mos)
+        log_message = calc_analyzer_call_message(restricted=self.calc_info.restricted, calc_name=self.name, orb_range=orb_range, irrep=irrep)
+        return log_message + str(sfos) + "\n\n" + str(mos)
 
     @abstractmethod
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO) -> float:
