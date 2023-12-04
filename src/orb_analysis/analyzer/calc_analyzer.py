@@ -68,7 +68,7 @@ class CalcAnalyzer(ABC):
     complex: Complex
     fragments: Sequence[Fragment] = attrs.field(default=list)
 
-    def __call__(self, orb_range: tuple[int, int], irrep: str | None = None, spin: str = SpinTypes.A) -> str:
+    def __call__(self, orb_range: tuple[int, int] = (6, 6), irrep: str | None = None, spin: str = SpinTypes.A) -> str:
         sfos = self.get_sfo_orbitals(orb_range, orb_range, irrep, spin)
         mos = self.get_mo_orbitals(orb_range, irrep, spin)
         log_message = calc_analyzer_call_message(restricted=self.calc_info.restricted, calc_name=self.name, orb_range=orb_range, irrep=irrep, spin=spin)
@@ -149,9 +149,12 @@ class RestrictedCalcAnalyser(CalcAnalyzer):
         # First, we want to store frag1 orbitals from LUMO+x to HOMO-x for easier printing later on
         # Second, LUMO - LUMO overlap has no phyiscal meaning so it is turned to 0.0
         overlap_matrix = np.zeros(shape=(len(frag_orbs[0]), len(frag_orbs[1])))
-        for i, frag1_orb in enumerate(frag_orbs[0]):
-            for j, frag2_orb in enumerate(frag_orbs[1][::-1]):
-                overlap_matrix[i, j] = self.get_sfo_overlap(frag1_orb, frag2_orb) if not (frag1_orb.occupation < 1e-6 and frag2_orb.occupation < 1e-6) else 0.0
+        try:
+            for i, frag1_orb in enumerate(frag_orbs[0]):
+                for j, frag2_orb in enumerate(frag_orbs[1][::-1]):
+                    overlap_matrix[i, j] = self.get_sfo_overlap(frag1_orb, frag2_orb) if not (frag1_orb.occupation < 1e-6 and frag2_orb.occupation < 1e-6) else 0.0
+        except KeyError:
+            print("Detecting irrep error in getting the overlap matrix, skipping it as a result")
         return SFOManager(frag1_orbs=frag_orbs[0], frag2_orbs=frag_orbs[1], overlap_matrix=overlap_matrix)
 
 

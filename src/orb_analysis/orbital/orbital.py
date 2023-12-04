@@ -53,7 +53,7 @@ class Orbital(ABC):
     @property
     def homo_lumo_label(self) -> str:
         """ Returns the label in the format HOMO(-x), SOMO(-x) / SOMO(+x), or LUMO(+x) """
-        ret_str = OCCUPATION_TO_LABEL[round(self.occupation, 1)]
+        ret_str = OCCUPATION_TO_LABEL[round(self.occupation)]
 
         if self.is_occupied:
             ret_str = f"{ret_str}-{self.homo_lumo_index}" if self.homo_lumo_index != 0 else ret_str

@@ -13,8 +13,9 @@ def main():
 
     args = parser.parse_args()
 
+    orb_range = args.orb_range if args.orb_range is not None else (6, 6)
     analyzer = create_calc_analyser(args.file)
-    analysis = analyzer(orb_range=(args.orb_range), spin=args.spin, irrep=args.irrep)
+    analysis = analyzer(orb_range=orb_range, spin=args.spin, irrep=args.irrep)
 
     if args.output_file:
         pl.Path(args.output_file).write_text(analysis)
