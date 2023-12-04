@@ -43,7 +43,7 @@ def create_calc_analyser(path_to_rkf_file: str | pl.Path, n_fragments: int = 2) 
     # - :CalcInfo: An instance that contains general information about the calculation such as restricted or unrestricted, relativistic or non-relativistic, etc.
     # - :Complex: An instance that contains information about the complex calculation (Molecular Orbitals)
     # - A list of :Fragment: objects that contain information about the fragment calculation and the fragments respectively (Symmetrized Fragment Orbitals).
-    name = path_to_rkf_file.parent.name
+    name = path_to_rkf_file.parent.name + "/" + path_to_rkf_file.stem
     calc_info = CalcInfo(kf_file=kf_file)
     complex = create_complex(name=name, kf_file=kf_file, restricted_calc=calc_info.restricted)
 
@@ -71,7 +71,7 @@ class CalcAnalyzer(ABC):
     def __call__(self, orb_range: tuple[int, int], irrep: str | None = None, spin: str = SpinTypes.A) -> str:
         sfos = self.get_sfo_orbitals(orb_range, orb_range, irrep, spin)
         mos = self.get_mo_orbitals(orb_range, irrep, spin)
-        log_message = calc_analyzer_call_message(restricted=self.calc_info.restricted, calc_name=self.name, orb_range=orb_range, irrep=irrep)
+        log_message = calc_analyzer_call_message(restricted=self.calc_info.restricted, calc_name=self.name, orb_range=orb_range, irrep=irrep, spin=spin)
         return log_message + str(sfos) + "\n\n" + str(mos)
 
     @abstractmethod

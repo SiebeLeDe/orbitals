@@ -232,9 +232,6 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
         total_sfo_sum_frag1 = sum(frags_sfo_irrep_sums[0][irrep] for irrep in frags_sfo_irrep_sums[0])
         total_sfo_sum_frag2 = sum(frags_sfo_irrep_sums[1][irrep] for irrep in frags_sfo_irrep_sums[1])
         total_sfo_for_one_spin = total_sfo_sum_frag1 + total_sfo_sum_frag2 + start_index
-        print(frozen_core_per_irrep)
-        print(start_index)
-        print(total_sfo_sum_frag1)
 
         if frag_index == 1:
             return {

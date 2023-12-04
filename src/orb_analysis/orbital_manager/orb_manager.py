@@ -6,9 +6,8 @@ from orb_analysis.orbital.orbital import MO, SFO
 import pandas as pd
 from itertools import zip_longest
 
-ORB_LABEL_FORMAT = "14s"
-ENERGY_FORMAT = ".4f"
-GROSSPOP_FORMAT = ".4f"
+ENERGY_FORMAT = "+.4f"
+GROSSPOP_FORMAT = ".3f"
 
 
 class OrbitalManager(ABC):
@@ -53,15 +52,20 @@ class SFOManager(OrbitalManager):
         return df.to_string(float_format="{:0.4f}".format)
 
     def __str__(self):
+        longest_orb_label_frag1 = max([len(orb.amsview_label) for orb in self.frag1_orbs]) + 1
+        longest_orb_label_frag2 = max([len(orb.amsview_label) for orb in self.frag2_orbs]) + 1
+        longest_homo_lumo_label_frag1 = max([len(orb.homo_lumo_label) for orb in self.frag1_orbs]) + 1
+        longest_homo_lumo_label_frag2 = max([len(orb.homo_lumo_label) for orb in self.frag2_orbs]) + 1
+
         frag1_orb_info = [
-            f"{orb.amsview_label:{ORB_LABEL_FORMAT}} ({orb.homo_lumo_label :7s}): "
+            f"{orb.amsview_label:{longest_orb_label_frag1}} ({orb.homo_lumo_label :{longest_homo_lumo_label_frag1}}): "
             f"E (Ha): {orb.energy:{ENERGY_FORMAT}}, "
             f"Grosspop: {orb.gross_pop:{GROSSPOP_FORMAT}}"
             for orb in self.frag1_orbs
         ]
 
         frag2_orb_info = [
-            f"{orb.amsview_label:{ORB_LABEL_FORMAT}} ({orb.homo_lumo_label :7s}): "
+            f"{orb.amsview_label:{longest_orb_label_frag2}} ({orb.homo_lumo_label :{longest_homo_lumo_label_frag2}}): "
             f"E (Ha): {orb.energy:{ENERGY_FORMAT}}, "
             f"Grosspop: {orb.gross_pop:{GROSSPOP_FORMAT}}"
             for orb in self.frag2_orbs

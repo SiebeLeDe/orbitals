@@ -192,7 +192,6 @@ class RestrictedFragment(Fragment):
         orb_energies = self.fragment_data.orb_energies
         gross_pop = self.fragment_data.gross_populations
         occupations = self.fragment_data.occupations
-        print(gross_pop)
 
         return self._get_sfos(orbital_range, orb_irrep, SpinTypes.A, orb_energies, occupations, gross_pop)
 
