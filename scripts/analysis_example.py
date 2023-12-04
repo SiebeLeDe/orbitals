@@ -10,6 +10,7 @@ np.set_printoptions(precision=5, suppress=True)
 
 # ------------------Available test files------------------ #
 class TestFiles:
+    # Download the test files from https://github.com/SiebeLeDe/orbitals/tree/main/test/fixtures/rkfs
     # FILE1 does not work and don't know how to fix it. Gross populations fail completely due to unclear documentation of frag frozen cores per irrep in rkf files
     FILE1 = "restricted_largecore_differentfragsym_c4v_full"
     FILE2 = "restricted_largecore_fragsym_c3v_full"
