@@ -1,21 +1,27 @@
 ﻿from abc import ABC
 import attrs
-from orb_analysis.custom_types import RestrictedProperty, UnrestrictedProperty, SpinTypes
+import numpy as np
+from orb_analysis.custom_types import Array1D, RestrictedProperty, UnrestrictedProperty, SpinTypes
 from scm.plams import KFFile
 from orb_analysis.orb_functions.sfo_functions import get_frozen_cores_per_irrep, get_gross_populations, get_fragment_properties, get_frag_name, get_ordered_irreps_of_one_frag
 
 
-def create_fragment_data(restricted_frag: bool, frag_index: int, kf_file: KFFile):
-    """
-    Creates a fragment data object from the kf_file. The type of fragment object depends on the calculation type (restricted or unrestricted).
-    """
-    if restricted_frag:
-        return _create_restricted_fragment_data(kf_file, frag_index)
-    else:
-        return _create_unrestricted_fragment_data(kf_file, frag_index)
+# --------------------Helper Functions-------------------- #
+
+def flatten_data(data: RestrictedProperty, ordered_irreps: list[str]) -> Array1D[np.float64]:
+    """ Flattens the data from a dictionary with {irrep: [data]} to a list with [data]."""
+    try:
+        return np.concatenate([data[irrep] for irrep in ordered_irreps])
+    except KeyError:
+        return data["A"]  # When the complex has has "nosym"
+
+# --------------------Interface Function(s)-------------------- #
 
 
-def _create_restricted_fragment_data(kf_file: KFFile, frag_index: int):
+def create_restricted_fragment_data(kf_file: KFFile, frag_index: int):
+    """
+    Creates a restricted fragment data object from the kf_file.
+    """
     data_dic_to_be_unpacked = {}
 
     # Get the fragment name
@@ -38,7 +44,10 @@ def _create_restricted_fragment_data(kf_file: KFFile, frag_index: int):
     return new_fragment_data
 
 
-def _create_unrestricted_fragment_data(kf_file: KFFile, frag_index: int):
+def create_unrestricted_fragment_data(kf_file: KFFile, frag_index: int):
+    """
+    Creates an unrestricted fragment data object from the kf_file.
+    """
     data_dic_to_be_unpacked = {}
 
     # Get the fragment name
@@ -54,6 +63,8 @@ def _create_unrestricted_fragment_data(kf_file: KFFile, frag_index: int):
 
     new_fragment_data = UnrestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked, frag_irreps=frag_irreps)
     return new_fragment_data
+
+# --------------------Fragment Data Classes -------------------- #
 
 
 @attrs.define
@@ -147,7 +158,7 @@ def main():
     rkf_file = 'unrestricted_largecore_fragsym_nosym_full.adf.rkf'
     kf_file = KFFile(str(rkf_dir / rkf_file))
 
-    data = create_fragment_data(restricted_frag=False, frag_index=2, kf_file=kf_file)
+    data = create_restricted_fragment_data(frag_index=2, kf_file=kf_file)
     print(data.frag_irreps)
 
     # grospop = get_gross_populations(kf_file, frag_index=2)

@@ -65,9 +65,10 @@ class Orbital(ABC):
     @abstractmethod
     def amsview_label(self) -> str:
         pass
-#  ------------------------------------------------------------------
+
+# -------------------------------------------------------------------
 # ------------------------ Magic Methods ----------------------------
-#  ------------------------------------------------------------------
+# -------------------------------------------------------------------
 
     @abstractmethod
     def __eq__(self, __value: str | SFO) -> bool:
@@ -98,7 +99,7 @@ class SFO(Orbital):
     @property
     def amsview_label(self) -> str:
         """ Returns the orbital label that can be used for AMSView plotting """
-        return f"SFO_{self.irrep}_{self.index}"
+        return f"SFO_{self.irrep}_{self.index}_{self.spin}"
 
 
 class MO(Orbital):
@@ -123,7 +124,7 @@ class MO(Orbital):
     @property
     def amsview_label(self) -> str:
         """ Returns the orbital label that can be used for AMSView plotting """
-        return f"SCF_{self.irrep}_{self.index}"
+        return f"SCF_{self.irrep}_{self.index}_{self.spin}"
 
 
 def main():

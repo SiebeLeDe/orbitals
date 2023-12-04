@@ -4,6 +4,11 @@ from orb_analysis.custom_types import Array2D
 import numpy as np
 from orb_analysis.orbital.orbital import MO, SFO
 import pandas as pd
+from itertools import zip_longest
+
+ORB_LABEL_FORMAT = "14s"
+ENERGY_FORMAT = ".4f"
+GROSSPOP_FORMAT = ".4f"
 
 
 class OrbitalManager(ABC):
@@ -14,6 +19,19 @@ class OrbitalManager(ABC):
 class MOManager(OrbitalManager):
     """ This class contains methods for accessing information about molecular orbitals (MOs). """
     complex_mos: list[MO]
+
+    def __str__(self):
+        """
+        Returns a string with the molecular orbital amsview label, homo_lumo label, energy, and grosspop in the formatted way.
+        """
+        mos_info = [f"{orb.amsview_label :13s} ({orb.homo_lumo_label :7s}): E (Ha): {orb.energy:+.4f}" for orb in self.complex_mos]
+
+        max_len_frag1 = max(len(info) for info in mos_info)
+
+        header = f"{'Molecular Orbitals':^{max_len_frag1}}"
+        mos_info_str = '\n'.join([header] + mos_info)
+
+        return mos_info_str
 
 
 @attrs.define
@@ -35,16 +53,29 @@ class SFOManager(OrbitalManager):
         return df.to_string(float_format="{:0.4f}".format)
 
     def __str__(self):
-        """
-        Returns a string with the fragment orbital amsview label, homo_lumo label, energy, and grosspop in the formatted way.
-        It also includes the formatted overlap matrix
-        """
-        orbital_info = ""
-        for orb in self.frag1_orbs:
-            orbital_info += f"Fragment 1 SFO: {orb.amsview_label :10s}, {orb.homo_lumo_label :8s}, E (Ha): {orb.energy :.3f}, Grosspop: {orb.gross_pop :.4f}\n"
-        for orb in self.frag2_orbs:
-            orbital_info += f"Fragment 2 SFO: {orb.amsview_label :10s}, {orb.homo_lumo_label :8s}, E (Ha): {orb.energy :.3f}, Grosspop: {orb.gross_pop :.4f}\n"
+        frag1_orb_info = [
+            f"{orb.amsview_label:{ORB_LABEL_FORMAT}} ({orb.homo_lumo_label :7s}): "
+            f"E (Ha): {orb.energy:{ENERGY_FORMAT}}, "
+            f"Grosspop: {orb.gross_pop:{GROSSPOP_FORMAT}}"
+            for orb in self.frag1_orbs
+        ]
+
+        frag2_orb_info = [
+            f"{orb.amsview_label:{ORB_LABEL_FORMAT}} ({orb.homo_lumo_label :7s}): "
+            f"E (Ha): {orb.energy:{ENERGY_FORMAT}}, "
+            f"Grosspop: {orb.gross_pop:{GROSSPOP_FORMAT}}"
+            for orb in self.frag2_orbs
+        ]
+
+        max_len_frag1 = max(len(info) for info in frag1_orb_info)
+        max_len_frag2 = max(len(info) for info in frag2_orb_info)
+
+        combined_info = [f"{frag1:<{max_len_frag1}} | {frag2:<{max_len_frag2}}" for frag1, frag2 in zip_longest(frag1_orb_info, frag2_orb_info, fillvalue="")]
+
+        header = f"{'Fragment 1':^{max_len_frag1}} | {'Fragment 2':^{max_len_frag2}}"
+        combined_info_str = '\n'.join([header] + combined_info)
 
         overlap_matrix_table = self.get_overlap_matrix_table()
+        note = "overlap is guaranteed 0.0 when the irreps do not match and when both are unoccupied [non-physical]"
 
-        return f"{orbital_info}\nOverlap Matrix (LUMO-LUMO overlap is set to 0.0):\n{overlap_matrix_table}"
+        return f"{combined_info_str}\n\nOverlap Matrix ({note}):\n{overlap_matrix_table}"

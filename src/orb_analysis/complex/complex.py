@@ -59,8 +59,20 @@ class Complex(ABC):
     def get_occupation(self, irrep: str, index: int, spin: str) -> float:
         pass
 
+    def _get_mos(self, orb_range: tuple[int, int], orb_irrep: str | None, spin: str, orb_energies, occupations) -> list[MO]:
+        max_occupied_orbitals, max_unoccupied_orbitals = orb_range
+        irreps = [orb_irrep.upper()] if orb_irrep is not None else self.complex_data.irreps
+        mos: list[MO] = []
+
+        # Then, flatten the data to a list of mos
+        for irrep in self.complex_data.irreps:
+            for index, energy, occ in zip(range(1, len(orb_energies[irrep])+1), orb_energies[irrep], occupations[irrep]):
+                mos.append(MO(index=index, irrep=irrep, spin=spin, energy=energy, occupation=occ))
+
+        return filter_orbitals(mos, max_occupied_orbitals, max_unoccupied_orbitals, irreps)
+
     @abstractmethod
-    def get_mos(self, orb_range: tuple[int, int], orb_irrep: str | None = None, spin: str | None = SpinTypes.A) -> list[MO]:
+    def get_mos(self, orb_range: tuple[int, int], spin: str | None = None, orb_irrep: str | None = None) -> list[MO]:
         pass
 
 
@@ -76,20 +88,11 @@ class RestrictedComplex(Complex):
         return self.complex_data.occupations[irrep][index-1]
 
     def get_mos(self, orb_range: tuple[int, int], orb_irrep: str | None = None, spin: str | None = SpinTypes.A) -> list[MO]:
-        max_occupied_orbitals, max_unoccupied_orbitals = orb_range
-        irreps = [orb_irrep.upper()] if orb_irrep is not None else self.complex_data.irreps
-        mos: list[MO] = []
-
         # First get the data
         orb_energies = self.complex_data.orb_energies
         occupations = self.complex_data.occupations
 
-        # Then, flatten the data to a list of mos
-        for irrep in self.complex_data.irreps:
-            for index, energy, occ in zip(range(1, len(orb_energies[irrep])+1), orb_energies[irrep], occupations[irrep]):
-                mos.append(MO(index=index, irrep=irrep, spin=SpinTypes.A, energy=energy, occupation=occ))
-
-        return filter_orbitals(mos, max_occupied_orbitals, max_unoccupied_orbitals, irreps)
+        return self._get_mos(orb_range, orb_irrep, SpinTypes.A, orb_energies, occupations)
 
 
 class UnrestrictedComplex(Complex):
@@ -102,5 +105,9 @@ class UnrestrictedComplex(Complex):
     def get_occupation(self, irrep: str, index: int, spin: str):
         return self.complex_data.occupations[spin][irrep][index-1]
 
-    def get_mos(self, irrep: str, spin: str) -> list[MO]:
-        raise NotImplementedError("This method is not implemented yet.")
+    def get_mos(self, orb_range: tuple[int, int], spin: str, orb_irrep: str | None = None) -> list[MO]:
+        # First get the data
+        orb_energies = self.complex_data.orb_energies[spin]
+        occupations = self.complex_data.occupations[spin]
+
+        return self._get_mos(orb_range, orb_irrep, spin, orb_energies, occupations)

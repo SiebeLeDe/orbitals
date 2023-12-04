@@ -10,6 +10,8 @@ import pathlib as pl
 import attrs
 from scm.plams import KFFile
 import numpy as np
+from orb_analysis.analyzer.calc_info import CalcInfo
+from orb_analysis.custom_types import SpinTypes
 
 from orb_analysis.fragment.fragment import Fragment, RestrictedFragment, UnrestrictedFragment, create_restricted_fragment, create_unrestricted_fragment
 from orb_analysis.complex.complex import Complex, create_complex
@@ -46,36 +48,14 @@ def create_calc_analyser(path_to_rkf_file: str | pl.Path, n_fragments: int = 2) 
     complex = create_complex(name=name, kf_file=kf_file, restricted_calc=calc_info.restricted)
 
     if calc_info.restricted:
-        fragments = [create_restricted_fragment(kf_file=kf_file, frag_index=i+1,) for i in range(n_fragments)]
+        fragments = [create_restricted_fragment(kf_file=kf_file, frag_index=i+1, calc_info=calc_info) for i in range(n_fragments)]
         return RestrictedCalcAnalyser(name=name, kf_file=kf_file, calc_info=calc_info, complex=complex, fragments=fragments)
 
-    fragments = [create_unrestricted_fragment(kf_file=kf_file, frag_index=i+1) for i in range(n_fragments)]
+    fragments = [create_unrestricted_fragment(kf_file=kf_file, frag_index=i+1, calc_info=calc_info) for i in range(n_fragments)]
     return UnrestrictedCalcAnalyser(name=name, kf_file=kf_file, calc_info=calc_info, complex=complex, fragments=fragments)
 
 
 # --------------------Classes-------------------- #
-
-@attrs.define
-class CalcInfo:
-    """
-    This class contains information about the orbitals present in the complex calculation
-    """
-    kf_file: KFFile
-    restricted: bool = True
-    relativistic: bool = False
-    symmetry: bool = False
-
-    def __attrs_post_init__(self):
-        # First, get relevant terms such as symmetry group label, unrestricted, relativistic, etc.
-        if str(self.kf_file.read("Symmetry", "grouplabel")).split()[0].lower() not in ["nosym"]:
-            self.symmetry = True
-
-        if int(self.kf_file.read("General", "nspin") != 1):
-            self.restricted = False
-
-        if int(self.kf_file.read("General", "ioprel") != 0):
-            self.relativistic = True
-
 
 @attrs.define
 class CalcAnalyzer(ABC):
@@ -87,6 +67,14 @@ class CalcAnalyzer(ABC):
     kf_file: KFFile
     complex: Complex
     fragments: Sequence[Fragment] = attrs.field(default=list)
+
+    def __call__(self, orb_range: tuple[int, int], irrep: str | None = None, spin: str = SpinTypes.A) -> str:
+        sfos = self.get_sfo_orbitals(orb_range, orb_range, irrep, spin)
+        mos = self.get_mo_orbitals(orb_range, irrep, spin)
+        if self.calc_info.restricted:
+            return str(sfos) + "\n\n" + str(mos)
+        note = f"This is an unrestricted calculation. The analysis is performed for {spin=}! \n"
+        return note + str(sfos) + "\n\n" + str(mos)
 
     @abstractmethod
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO) -> float:
@@ -125,12 +113,15 @@ class RestrictedCalcAnalyser(CalcAnalyzer):
     """
     fragments: Sequence[RestrictedFragment] = attrs.field(default=list)
 
+    def _get_sfo(self, sfo: str | SFO) -> SFO:
+        return SFO.from_label(sfo) if isinstance(sfo, str) else sfo
+
+    def _get_fragment(self, fragment: int):
+        return self.fragments[fragment-1]
+
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO):
-
-        sfo1 = SFO.from_label(sfo1) if isinstance(sfo1, str) else sfo1
-        sfo2 = SFO.from_label(sfo2) if isinstance(sfo2, str) else sfo2
-
-        return self.fragments[0].get_overlap(
+        sfo1, sfo2 = self._get_sfo(sfo1), self._get_sfo(sfo2)
+        return self._get_fragment(0).get_overlap(
             kf_file=self.kf_file,
             uses_symmetry=self.calc_info.symmetry,
             irrep1=sfo1.irrep,
@@ -139,26 +130,22 @@ class RestrictedCalcAnalyser(CalcAnalyzer):
             index2=sfo2.index)
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
-        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
-
-        if not self.calc_info.symmetry:
-            return self.fragments[fragment-1].get_gross_population(irrep="A", index=sfo.index)
-        return self.fragments[fragment-1].get_gross_population(irrep=sfo.irrep, index=sfo.index)
+        sfo = self._get_sfo(sfo)
+        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep if self.calc_info.symmetry else "A", index=sfo.index)
 
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO):
-        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
-        return self.fragments[fragment-1].get_orbital_energy(irrep=sfo.irrep, index=sfo.index)
+        sfo = self._get_sfo(sfo)
+        return self._get_fragment(fragment).get_orbital_energy(irrep=sfo.irrep, index=sfo.index)
 
     def get_sfo_occupation(self, fragment: int, sfo: str | SFO):
-        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
-        return self.fragments[fragment-1].get_occupation(irrep=sfo.irrep, index=sfo.index)
+        sfo = self._get_sfo(sfo)
+        return self._get_fragment(fragment).get_occupation(irrep=sfo.irrep, index=sfo.index)
 
     def get_mo_orbitals(self, orb_range: tuple[int, int] = (-10, 10), irrep: str | None = None, spin: str | None = None) -> MOManager:
         mos = self.complex.get_mos(orb_range=orb_range, orb_irrep=irrep, spin=spin)
-
         return MOManager(complex_mos=mos)
 
-    def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None) -> SFOManager:
+    def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None, spin: str | None = None) -> SFOManager:
         frag_orbs = [frag.get_sfos(homo_lumo_range, irrep) for homo_lumo_range, frag in zip([frag1_orb_range, frag2_orb_range], self.fragments)]
 
         # First, we want to store frag1 orbitals from LUMO+x to HOMO-x for easier printing later on
@@ -177,15 +164,18 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
     """
     fragments: Sequence[UnrestrictedFragment] = attrs.field(default=list)
 
+    def _get_sfo(self, sfo: str | SFO) -> SFO:
+        return SFO.from_label(sfo) if isinstance(sfo, str) else sfo
+
+    def _get_fragment(self, fragment: int):
+        return self.fragments[fragment-1]
+
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO):
-
-        sfo1 = SFO.from_label(sfo1) if isinstance(sfo1, str) else sfo1
-        sfo2 = SFO.from_label(sfo2) if isinstance(sfo2, str) else sfo2
-
+        sfo1, sfo2 = self._get_sfo(sfo1), self._get_sfo(sfo2)
         if sfo1.spin != sfo2.spin:
             return 0.0
 
-        return self.fragments[0].get_overlap(
+        return self._get_fragment(0).get_overlap(
             kf_file=self.kf_file,
             uses_symmetry=self.calc_info.symmetry,
             irrep1=sfo1.irrep,
@@ -195,25 +185,28 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
             spin=sfo1.spin)
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
-        """ Method that returns the gross population of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" or SFO object."""
-        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
-
-        if not self.calc_info.symmetry:
-            return self.fragments[fragment-1].get_gross_population(irrep="A", index=sfo.index, spin=sfo.spin)
-        return self.fragments[fragment-1].get_gross_population(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
+        sfo = self._get_sfo(sfo)
+        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep if self.calc_info.symmetry else "A", index=sfo.index, spin=sfo.spin)
 
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO):
-        """ Method that returns the orbital energy of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" or SFO object."""
-        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
-        return self.fragments[fragment-1].get_orbital_energy(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
+        sfo = self._get_sfo(sfo)
+        return self._get_fragment(fragment).get_orbital_energy(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
 
     def get_sfo_occupation(self, fragment: int, sfo: str | SFO):
-        """ Method that returns the occupation of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" or SFO object."""
-        sfo = SFO.from_label(sfo) if isinstance(sfo, str) else sfo
-        return self.fragments[fragment-1].get_occupation(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
+        sfo = self._get_sfo(sfo)
+        return self._get_fragment(fragment).get_occupation(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
 
-    def get_mo_orbitals(self) -> SFOManager:
-        raise NotImplementedError("This Method is not implemented yet for unrestricted calculations.")
+    def get_mo_orbitals(self, orb_range: tuple[int, int] = (-10, 10), irrep: str | None = None, spin: str = SpinTypes.A) -> MOManager:
+        mos = self.complex.get_mos(orb_range=orb_range, orb_irrep=irrep, spin=spin)
+        return MOManager(complex_mos=mos)
 
-    def get_sfo_orbitals(self) -> SFOManager:
-        raise NotImplementedError("This Method is not implemented yet for unrestricted calculations.")
+    def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None, spin: str = SpinTypes.A) -> SFOManager:
+        frag_orbs = [frag.get_sfos(homo_lumo_range, irrep, spin) for homo_lumo_range, frag in zip([frag1_orb_range, frag2_orb_range], self.fragments)]
+
+        # First, we want to store frag1 orbitals from LUMO+x to HOMO-x for easier printing later on
+        # Second, LUMO - LUMO overlap has no phyiscal meaning so it is turned to 0.0
+        overlap_matrix = np.zeros(shape=(len(frag_orbs[0]), len(frag_orbs[1])))
+        for i, frag1_orb in enumerate(frag_orbs[0]):
+            for j, frag2_orb in enumerate(frag_orbs[1][::-1]):
+                overlap_matrix[i, j] = self.get_sfo_overlap(frag1_orb, frag2_orb) if not (frag1_orb.occupation < 1e-6 and frag2_orb.occupation < 1e-6) else 0.0
+        return SFOManager(frag1_orbs=frag_orbs[0], frag2_orbs=frag_orbs[1], overlap_matrix=overlap_matrix)

@@ -60,11 +60,8 @@ def get_frag_name(kf_file: KFFile, frag_index: int) -> str:
 
 def uses_symmetry(kf_file: KFFile) -> bool:
     """ Returns True if the complex calculation uses symmetry for its MOs and other parts such as gross populations and overlap. """
-    grouplabel = kf_file.read("Symmetry", "grouplabel").split()  # type: ignore
-
-    if grouplabel[0].lower() == "nosym":
-        return False
-    return True
+    grouplabel: str = kf_file.read("Symmetry", "grouplabel").split()[0]  # type: ignore
+    return grouplabel.lower() != "nosym"
 
 
 def get_total_number_sfos(kf_file: KFFile) -> int:
@@ -231,25 +228,34 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
     raw_gross_pop_all_sfos = np.array(kf_file.read("SFO popul", "sfo_grosspop"))
 
     if not symmetry_used:
-        start_index = sum(frozen_core_per_irrep[irrep] for irrep in frozen_core_per_irrep)
+        start_index = sum(frozen_core_per_irrep.values())
         total_sfo_sum_frag1 = sum(frags_sfo_irrep_sums[0][irrep] for irrep in frags_sfo_irrep_sums[0])
         total_sfo_sum_frag2 = sum(frags_sfo_irrep_sums[1][irrep] for irrep in frags_sfo_irrep_sums[1])
+        total_sfo_for_one_spin = total_sfo_sum_frag1 + total_sfo_sum_frag2 + start_index
+        print(frozen_core_per_irrep)
+        print(start_index)
+        print(total_sfo_sum_frag1)
 
         if frag_index == 1:
-            return {SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index:total_sfo_sum_frag1]}}
+            return {
+                SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index: start_index + total_sfo_sum_frag1]},
+                SpinTypes.B: {"A": raw_gross_pop_all_sfos[total_sfo_for_one_spin:total_sfo_for_one_spin + total_sfo_sum_frag1]}
+            }
 
-        return {SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index + total_sfo_sum_frag1: start_index + total_sfo_sum_frag1 + total_sfo_sum_frag2]}}
+        return {
+            SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index + total_sfo_sum_frag1: start_index + total_sfo_sum_frag1 + total_sfo_sum_frag2]},
+            SpinTypes.B: {"A": raw_gross_pop_all_sfos[total_sfo_for_one_spin + total_sfo_sum_frag1: total_sfo_for_one_spin + total_sfo_sum_frag1 + total_sfo_sum_frag2]}
+        }
 
     gross_pop_active_sfos = {str(spin): {irrep: np.zeros_like(frags_sfo_irrep_sums[frag_index-1][irrep], dtype=np.float64) for irrep in frags_sfo_irrep_sums[frag_index - 1]} for spin in SpinTypes}
 
-    # only works if frag1 and frag2 have the same irreps
+    # only works if frag1 and frag2 have the same irreps and thus belong to the same point group
     for spin in SpinTypes:
-        raw_gross_pop_index = 0 if spin == SpinTypes.A else get_total_number_sfos(kf_file)
+        raw_gross_pop_index = 0 if spin == SpinTypes.A else get_total_number_sfos(kf_file) + sum(frozen_core_per_irrep.values())
         for irrep in ordered_irreps:
-            n_frozen_cores = frozen_core_per_irrep[irrep] if irrep in frozen_core_per_irrep else 0
+            n_frozen_cores = frozen_core_per_irrep.get(irrep, 0)
             n_sfos_frag1 = frags_sfo_irrep_sums[0][irrep]
             n_sfos_frag2 = frags_sfo_irrep_sums[1][irrep]
-
             start_irrep_index = raw_gross_pop_index + n_frozen_cores
 
             if frag_index == 1:
