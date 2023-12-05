@@ -17,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+    environment:
+      name: pypi-publish
+      url: https://pypi.org/project/${{ github.event.repository.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -35,8 +38,3 @@ jobs:
 
       - name: Publish ${{ github.event.repository.name }} to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          # If you want to publish to TestPyPI, uncomment the following line
-          # repository-url: https://test.pypi.org/legacy/
