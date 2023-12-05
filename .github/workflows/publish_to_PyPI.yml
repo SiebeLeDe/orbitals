@@ -18,12 +18,25 @@ jobs:
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
-    # retrieve your distributions here
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        # If you want to upload to TestPyPI, uncomment the following line
-        # repository_url: https://test.pypi.org/legacy/
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Build package
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+
+      - name: Publish ${{ github.event.repository.name }} to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: SiebeLeDe
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          # If you want to publish to TestPyPI, uncomment the following line
+          # repository-url: https://test.pypi.org/legacy/
