@@ -2,9 +2,9 @@
 
 [![Testing](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_python_versions.yml/badge.svg)](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_python_versions.yml.yml)
 
-<!-- [![Documentation](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_docs.yml/badge.svg)](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_docs.yml)
+<!-- [![Documentation](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_docs.yml/badge.svg)](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_docs.yml) -->
 
-[![PyPI version](https://badge.fury.io/py/pyfrag-plotter.svg)](https://badge.fury.io/py/pyfrag-plotter) [![PyPI pyversions](https://img.shields.io/pypi/pyversions/pyfrag-plotter.svg)](https://pypi.python.org/pypi/pyfrag-plotter/) [![PyPI license](https://img.shields.io/pypi/l/pyfrag-plotter.svg)](https://pypi.python.org/pypi/pyfrag-plotter/) [![PyPI status](https://img.shields.io/pypi/status/pyfrag-plotter.svg)](https://pypi.python.org/pypi/pyfrag-plotter/) -->
+[![PyPI version](https://badge.fury.io/py/orb-analysis.svg)](https://badge.fury.io/py/orb-analysis) [![PyPI pyversions](https://img.shields.io/pypi/pyversions/orb-analysis.svg)](https://pypi.python.org/pypi/orb-analysis/) [![PyPI license](https://img.shields.io/pypi/l/orb-analysis.svg)](https://pypi.python.org/pypi/orb-analysis/) [![PyPI status](https://img.shields.io/pypi/status/orb-analysis.svg)](https://pypi.python.org/pypi/orb-analysis/)
 
 ![Overview Figure](docs/_static/Overview_figure.png)
 
