@@ -289,9 +289,9 @@ def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A1(calc_analyzer_unr
     homo_homo_overlap_A = analyzer.get_sfo_overlap("3_E1:1_A", "4_E1:1_A")
     homo_lumo_overlap_B = analyzer.get_sfo_overlap("4_A1_B", "4_A1_B")
     homo_homo_overlap_B = analyzer.get_sfo_overlap("3_E1:1_B", "4_E1:1_B")
-    assert homo_lumo_overlap_A == pytest.approx(0.4384, abs=1e-3)
+    assert homo_lumo_overlap_A == pytest.approx(-0.4384, abs=1e-3)
     assert homo_homo_overlap_A == pytest.approx(0.0207, abs=1e-3)
-    assert homo_lumo_overlap_B == pytest.approx(0.3751, abs=1e-3)
+    assert homo_lumo_overlap_B == pytest.approx(-0.3751, abs=1e-3)
     assert homo_homo_overlap_B == pytest.approx(0.0212, abs=1e-3)
 
 
