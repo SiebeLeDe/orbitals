@@ -1,13 +1,22 @@
 ﻿from abc import ABC
+from typing import Any
 import attrs
+from tabulate import tabulate
 from orb_analysis.custom_types import Array2D
 import numpy as np
+from orb_analysis.log_messages import OVERLAP_MATRIX_NOTE, STABILIZATION_MATRIX_NOTE, format_message
 from orb_analysis.orbital.orbital import MO, SFO
 import pandas as pd
 from itertools import zip_longest
+from scm.plams import Units
 
-ENERGY_FORMAT = "+.4f"
-GROSSPOP_FORMAT = ".3f"
+# Used for formatting the tables in the __str__ methods using the tabulate package
+TABLE_FORMAT_OPTIONS: dict[str, Any] = {
+    "numalign": "center",
+    "stralign": "left",
+    "floatfmt": "+.3f",
+    "tablefmt": "simple_outline",
+}
 
 
 class OrbitalManager(ABC):
@@ -23,63 +32,67 @@ class MOManager(OrbitalManager):
         """
         Returns a string with the molecular orbital amsview label, homo_lumo label, energy, and grosspop in the formatted way.
         """
-        mos_info = [f"{orb.amsview_label :13s} ({orb.homo_lumo_label :7s}): E (Ha): {orb.energy:+.4f}" for orb in self.complex_mos]
+        mos_info = [[orb.amsview_label, orb.homo_lumo_label, orb.energy] for orb in self.complex_mos]
 
-        max_len_frag1 = max(len(info) for info in mos_info)
+        headers = ["Molecular Orbitals", "", "Energy (Ha)"]
+        table = tabulate(tabular_data=mos_info, headers=headers, **TABLE_FORMAT_OPTIONS)
 
-        header = f"{'Molecular Orbitals':^{max_len_frag1}}"
-        mos_info_str = '\n'.join([header] + mos_info)
-
-        return mos_info_str
+        return table
 
 
 @attrs.define
 class SFOManager(OrbitalManager):
     """ This class contains methods for accessing information about symmetrized fragment orbitals (SFOs). """
-    frag1_orbs: list[SFO]
-    frag2_orbs: list[SFO]
+    frag1_orbs: list[SFO]  # Is sorted by energy from HOMO-x -> LUMO+x
+    frag2_orbs: list[SFO]  # Is reversed: LUMO+x -> HOMO-x
     overlap_matrix: Array2D[np.float64]
 
-    def get_overlap_matrix_table(self):
-        """ Returns a table (str) of the overlap matrix """
-        row_labels = [orb.homo_lumo_label for orb in self.frag1_orbs]
-        column_labels = [orb.homo_lumo_label for orb in self.frag2_orbs][::-1]
-
-        # Create a DataFrame from the overlap matrix
-        df = pd.DataFrame(self.overlap_matrix, index=row_labels, columns=column_labels)
-
-        # Convert the DataFrame to a string and return it
-        return df.to_string(float_format="{:0.4f}".format)
-
     def __str__(self):
-        longest_orb_label_frag1 = max([len(orb.amsview_label) for orb in self.frag1_orbs]) + 1
-        longest_orb_label_frag2 = max([len(orb.amsview_label) for orb in self.frag2_orbs]) + 1
-        longest_homo_lumo_label_frag1 = max([len(orb.homo_lumo_label) for orb in self.frag1_orbs]) + 1
-        longest_homo_lumo_label_frag2 = max([len(orb.homo_lumo_label) for orb in self.frag2_orbs]) + 1
-
         frag1_orb_info = [
-            f"{orb.amsview_label:{longest_orb_label_frag1}} ({orb.homo_lumo_label :{longest_homo_lumo_label_frag1}}): "
-            f"E (Ha): {orb.energy:{ENERGY_FORMAT}}, "
-            f"Grosspop: {orb.gross_pop:{GROSSPOP_FORMAT}}"
+            [orb.amsview_label, orb.homo_lumo_label, orb.energy, orb.gross_pop]
             for orb in self.frag1_orbs
         ]
 
         frag2_orb_info = [
-            f"{orb.amsview_label:{longest_orb_label_frag2}} ({orb.homo_lumo_label :{longest_homo_lumo_label_frag2}}): "
-            f"E (Ha): {orb.energy:{ENERGY_FORMAT}}, "
-            f"Grosspop: {orb.gross_pop:{GROSSPOP_FORMAT}}"
-            for orb in self.frag2_orbs
+            [orb.amsview_label, orb.homo_lumo_label, orb.energy, orb.gross_pop]
+            for orb in self.frag2_orbs[::-1]  # Reversed because best format is from bottom to top: HOMO-x -> LUMO+x
         ]
 
-        max_len_frag1 = max(len(info) for info in frag1_orb_info)
-        max_len_frag2 = max(len(info) for info in frag2_orb_info)
+        combined_info = [frag1 + frag2 for frag1, frag2 in zip_longest(frag1_orb_info, frag2_orb_info, fillvalue=["", "", "", ""])]
 
-        combined_info = [f"{frag1:<{max_len_frag1}} | {frag2:<{max_len_frag2}}" for frag1, frag2 in zip_longest(frag1_orb_info, frag2_orb_info, fillvalue="")]
-
-        header = f"{'Fragment 1':^{max_len_frag1}} | {'Fragment 2':^{max_len_frag2}}"
-        combined_info_str = '\n'.join([header] + combined_info)
+        headers = ["Fragment 1", "", "E (Ha)", "Popul"] + ["Fragment 2", "", "E (Ha)", "Popul"]
+        table = tabulate(tabular_data=combined_info, headers=headers, **TABLE_FORMAT_OPTIONS)
 
         overlap_matrix_table = self.get_overlap_matrix_table()
-        note = "overlap is guaranteed 0.0 when the irreps do not match and when both are unoccupied [non-physical]"
+        overlap_str = "\n".join(["Overlap Matrix", format_message(OVERLAP_MATRIX_NOTE), overlap_matrix_table])
 
-        return f"{combined_info_str}\n\nOverlap Matrix ({note}):\n{overlap_matrix_table}"
+        stabilization_matrix_table = self.get_stabilization_matrix_table()
+        stabilization_str = "\n".join(["Stabilization Matrix", format_message(STABILIZATION_MATRIX_NOTE), stabilization_matrix_table])
+
+        return f"{table}\n\n{overlap_str})\n\n{stabilization_str}"
+
+    def get_overlap_matrix_table(self):
+        """ Returns a table (str) of the overlap matrix """
+        row_labels = [orb.homo_lumo_label for orb in self.frag1_orbs]
+        column_labels = [orb.homo_lumo_label for orb in self.frag2_orbs]
+
+        # Create a DataFrame from the overlap matrix
+        df = pd.DataFrame(self.overlap_matrix, index=row_labels, columns=column_labels)
+        table = tabulate(df, headers='keys', **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
+        return table
+
+    def get_stabilization_matrix_table(self):
+        """ Calculates the stabilization matrix (S^2 / energy_gap) * 100 in units (au^2 / eV) and returns the matrix as a formatted string """
+        row_labels = [orb.homo_lumo_label for orb in self.frag1_orbs]
+        column_labels = [orb.homo_lumo_label for orb in self.frag2_orbs]
+
+        stabilization_matrix = np.zeros_like(self.overlap_matrix)
+        for i, frag1_orb in enumerate(self.frag1_orbs):
+            for j, frag2_orb in enumerate(self.frag2_orbs):
+                overlap = self.overlap_matrix[i, j]
+                energy_gap: float = Units.convert(abs(frag1_orb.energy - frag2_orb.energy), "ha", "eV")  # type: ignore
+                stabilization_matrix[i, j] = (overlap**2 / energy_gap) * 100
+
+        df = pd.DataFrame(stabilization_matrix, index=row_labels, columns=column_labels)
+        table = tabulate(df, headers='keys', **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
+        return table

@@ -31,17 +31,18 @@ class TestFiles:
 # --------------------Input Arguments-------------------- #
 module_path = pl.Path(orb_analysis.__file__).parent.parent.parent
 path_to_folder_with_rkf_files = module_path / "test" / "fixtures" / "rkfs"
+orb_range = (4, 4)  # The range of orbitals to be analyzed (HOMO-X, LUMO+X with X the specified range)
 
 # See the test/fixtures/rkfs folder for more examples (https://github.com/SiebeLeDe/orbitals/tree/main/test/fixtures/rkfs)
 rkf_file = TestFiles.FILE2
 path_to_rkf_file = path_to_folder_with_rkf_files / f"{rkf_file}.adf.rkf"
-path_to_rkf_file = pl.Path("/Users/siebeld/Desktop/fa.sh_full.adf.rkf")
+# path_to_rkf_file = pl.Path("/Users/siebeld/Desktop/fa.sh_full.adf.rkf")
 
 # --------------------Main-------------------- #
 calc_analyzer = create_calc_analyser(path_to_rkf_file)  # This is the main object that will be used to analyze the calculation
 
 # Another option is to get the SFOs. It returns an :OrbitalManager: object which contains the SFOs and associated overlap matrix. Printing this will result in a formatted table (string)
-orbs = calc_analyzer.get_sfo_orbitals(frag1_orb_range=(10, 10), frag2_orb_range=(10, 10))
+orbs = calc_analyzer.get_sfo_orbitals(frag1_orb_range=orb_range, frag2_orb_range=orb_range)
 print("\nGETTING THE SFOS (symmetrized fragment orbitals) DIRECTLY (get_sfo_orbitals method):")
 print(orbs)
 
@@ -51,13 +52,13 @@ print("\nSFO Overlap Matrix (get_overlap_matrix_table method):)")
 print(sfo_overlap)
 
 # Another option is to get the MOs. It returns an :OrbitalManager: object (MOManager) which contains the MOs. Printing this will result in a formatted table (string)
-orbs = calc_analyzer.get_mo_orbitals(orb_range=(10, 10))
+orbs = calc_analyzer.get_mo_orbitals(orb_range=orb_range)
 print("\nGETTING THE MOs (molecular orbitals) DIRECTLY (get_mo_orbitals method):")
 print(orbs)
 
 # Best way is to call the calc_analyzer object directly. Calling gets the SFOs, SFO overlap matrix, and MOs and returns a formatted table (string)
 print("\nCALLING THE CALC_ANALYZER OBJECT DIRECTLY:")
-summary = (calc_analyzer(orb_range=(10, 10)))
+summary = (calc_analyzer(orb_range=orb_range))
 print(summary)
 
 print("\nWRITING THE OUTPUT TO A FILE IN THE CURRENT DIRECTORY:")

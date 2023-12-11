@@ -1,6 +1,11 @@
 ﻿""" Module containing messages for logging and providing feedback to the user. """
 import textwrap
 
+OVERLAP_MATRIX_NOTE = "Overlap is guaranteed 0.0 when the irreps do not match and when both are unoccupied [non-physical]. "
+OVERLAP_MATRIX_NOTE += "HOMO-HOMO overlaps are related to Pauli repulsion, and HOMO-LUMO overlaps to stabilizing orbital interactions"
+
+STABILIZATION_MATRIX_NOTE = "calculated through (S^2 / energy gap * 100) with units (au^2 / eV). Higher is better!"
+
 
 def format_message(text, width=130):
     return '\n' + textwrap.fill(text, width) + '\n'

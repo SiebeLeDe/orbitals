@@ -145,13 +145,14 @@ class RestrictedCalcAnalyser(CalcAnalyzer):
 
     def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None, spin: str | None = None) -> SFOManager:
         frag_orbs = [frag.get_sfos(homo_lumo_range, irrep) for homo_lumo_range, frag in zip([frag1_orb_range, frag2_orb_range], self.fragments)]
+        frag_orbs[1] = frag_orbs[1][::-1]  # reverse the orbitals to go from LUMO+x -> HOMO-x to HOMO-x -> LUMO+x
 
         # First, we want to store frag1 orbitals from LUMO+x to HOMO-x for easier printing later on
         # Second, LUMO - LUMO overlap has no phyiscal meaning so it is turned to 0.0
         overlap_matrix = np.zeros(shape=(len(frag_orbs[0]), len(frag_orbs[1])))
         try:
             for i, frag1_orb in enumerate(frag_orbs[0]):
-                for j, frag2_orb in enumerate(frag_orbs[1][::-1]):
+                for j, frag2_orb in enumerate(frag_orbs[1]):
                     overlap_matrix[i, j] = self.get_sfo_overlap(frag1_orb, frag2_orb) if not (frag1_orb.occupation < 1e-6 and frag2_orb.occupation < 1e-6) else 0.0
         except KeyError:
             print("Detecting irrep error in getting the overlap matrix, skipping it as a result")
@@ -203,11 +204,16 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
 
     def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None, spin: str = SpinTypes.A) -> SFOManager:
         frag_orbs = [frag.get_sfos(homo_lumo_range, irrep, spin) for homo_lumo_range, frag in zip([frag1_orb_range, frag2_orb_range], self.fragments)]
+        frag_orbs[1] = frag_orbs[1][::-1]  # reverse the orbitals to go from LUMO+x -> HOMO-x to HOMO-x -> LUMO+x
 
         # First, we want to store frag1 orbitals from LUMO+x to HOMO-x for easier printing later on
         # Second, LUMO - LUMO overlap has no phyiscal meaning so it is turned to 0.0
         overlap_matrix = np.zeros(shape=(len(frag_orbs[0]), len(frag_orbs[1])))
-        for i, frag1_orb in enumerate(frag_orbs[0]):
-            for j, frag2_orb in enumerate(frag_orbs[1][::-1]):
-                overlap_matrix[i, j] = self.get_sfo_overlap(frag1_orb, frag2_orb) if not (frag1_orb.occupation < 1e-6 and frag2_orb.occupation < 1e-6) else 0.0
+        try:
+            for i, frag1_orb in enumerate(frag_orbs[0]):
+                for j, frag2_orb in enumerate(frag_orbs[1]):
+                    overlap_matrix[i, j] = self.get_sfo_overlap(frag1_orb, frag2_orb) if not (frag1_orb.occupation < 1e-6 and frag2_orb.occupation < 1e-6) else 0.0
+        except KeyError:
+            print("Detecting irrep error in getting the overlap matrix, skipping it as a result")
+
         return SFOManager(frag1_orbs=frag_orbs[0], frag2_orbs=frag_orbs[1], overlap_matrix=overlap_matrix)
