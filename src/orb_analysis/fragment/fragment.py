@@ -116,6 +116,20 @@ class Fragment(ABC):
     def name(self):
         return self.fragment_data.name
 
+    def _get_overlap(self, irrep: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int, spin: str = SpinTypes.A) -> float:
+        # Note: the overlap matrix is stored in the rkf file as a lower triangular matrix. Thus, the index is calculated as follows:
+        # index = max_index * (max_index - 1) // 2 + min_index - 1
+        frozen_cores_per_irrep = tuple(sorted(self.fragment_data.n_frozen_cores_per_irrep.items()))
+        index_mapping = get_frag_sfo_index_mapping_to_total_sfo_index(kf_file, frozen_cores_per_irrep, irrep)
+        index1 = index_mapping[1][irrep1][index1-1]
+        index2 = index_mapping[2][irrep2][index2-1]
+
+        min_index, max_index = sorted([index1, index2])
+        overlap_index = max_index * (max_index - 1) // 2 + min_index - 1
+        variable = f"S-CoreSFO_{spin}" if spin == SpinTypes.B else "S-CoreSFO"
+        overlap_matrix = np.array(kf_file.read(irrep1, variable))
+        return overlap_matrix[overlap_index]
+
     @abstractmethod
     def get_overlap(self, irrep: bool, kf_file: KFFile, irrep1: str, index1: int, irrep2: str, index2: int) -> float:
         """ Returns the overlap between two orbitals in a.u. """
@@ -166,17 +180,7 @@ class RestrictedFragment(Fragment):
         if not uses_symmetry:
             irrep1, irrep2 = "A", "A"
 
-        # Note: the overlap matrix is stored in the rkf file as a lower triangular matrix. Thus, the index is calculated as follows:
-        # index = max_index * (max_index - 1) // 2 + min_index - 1
-        frozen_cores_per_irrep = tuple(sorted(self.fragment_data.n_frozen_cores_per_irrep.items()))
-        index_mapping = get_frag_sfo_index_mapping_to_total_sfo_index(kf_file, frozen_cores_per_irrep, uses_symmetry)
-        index1 = index_mapping[1][irrep1][index1-1]
-        index2 = index_mapping[2][irrep2][index2-1]
-
-        min_index, max_index = sorted([index1, index2])
-        overlap_index = max_index * (max_index - 1) // 2 + min_index - 1
-        overlap_matrix = np.array(kf_file.read(irrep1, 'S-CoreSFO'))  # type: ignore
-        return abs(overlap_matrix[overlap_index])
+        return self._get_overlap(uses_symmetry, kf_file, irrep1, index1, irrep2, index2, SpinTypes.A)
 
     def get_orbital_energy(self, irrep: str, index: int, spin: str = SpinTypes.A) -> float:
         return self.fragment_data.orb_energies[irrep][index-1]
@@ -206,20 +210,7 @@ class UnrestrictedFragment(Fragment):
 
         if not uses_symmetry:
             irrep1, irrep2 = "A", "A"
-
-        # Note: the overlap matrix is stored in the rkf file as a lower triangular matrix. Thus, the index is calculated as follows:
-        # index = max_index * (max_index - 1) // 2 + min_index - 1
-
-        frozen_cores_per_irrep = tuple(sorted(self.fragment_data.n_frozen_cores_per_irrep.items()))
-        index_mapping = get_frag_sfo_index_mapping_to_total_sfo_index(kf_file, frozen_cores_per_irrep, uses_symmetry)
-        index1 = index_mapping[1][irrep1][index1-1]
-        index2 = index_mapping[2][irrep2][index2-1]
-
-        min_index, max_index = sorted([index1, index2])
-        overlap_index = max_index * (max_index - 1) // 2 + min_index - 1
-        variable = f"S-CoreSFO_{spin}" if spin == SpinTypes.B else "S-CoreSFO"
-        overlap_matrix = np.array(kf_file.read(irrep1, variable))  # type: ignore
-        return abs(overlap_matrix[overlap_index])
+        return self._get_overlap(uses_symmetry, kf_file, irrep1, index1, irrep2, index2, spin)
 
     def get_orbital_energy(self, irrep: str, index: int, spin: str) -> float:
         return self.fragment_data.orb_energies[spin][irrep][index-1]
