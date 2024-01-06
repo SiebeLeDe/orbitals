@@ -4,16 +4,17 @@ import textwrap
 OVERLAP_MATRIX_NOTE = "Overlap is guaranteed 0.0 when the irreps do not match and when both are unoccupied [non-physical]. "
 OVERLAP_MATRIX_NOTE += "HOMO-HOMO overlaps are related to Pauli repulsion, and HOMO-LUMO overlaps to stabilizing orbital interactions"
 
-STABILIZATION_MATRIX_NOTE = "calculated through (S^2 / energy gap * 100) with units (au^2 / eV). Higher is better!"
+STABILIZATION_MATRIX_NOTE = "calculated through (S^2 / energy gap * 100) with units (au^2 / eV). Higher is better with the assumption that the SFOs are *not* degenerate. "
+STABILIZATION_MATRIX_NOTE += "Otherwise, -S is the relevant indicator for the orbital interaction stabilization [Orbital Interactions in Chemistry, Albright, p24]."
 
 
 def format_message(text, width=130):
-    return '\n' + textwrap.fill(text, width) + '\n'
+    return "\n" + textwrap.fill(text, width) + "\n"
 
 
 def _get_header(length=130) -> str:
     header_text = "Calculation Analysis"
-    fill_char = '-'
+    fill_char = "-"
     padding = (length - len(header_text)) // 2
     return f"\n{fill_char * padding}{header_text}{fill_char * padding}"
 
@@ -38,7 +39,7 @@ def _get_orb_range_message(orb_range: tuple[int, int]) -> str:
 
 
 def _get_spin_message(spin: str):
-    return f"All considered orbitals belong to spin {spin}."
+    return f"All considered orbitals belong to spin {spin}. Note that this is only relevant for unrestricted calculations"
 
 
 def calc_analyzer_call_message(restricted: bool, calc_name: str, orb_range: tuple[int, int], irrep: str | None, spin: str) -> str:

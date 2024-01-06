@@ -12,20 +12,22 @@ from scm.plams import Units
 
 # Used for formatting the tables in the __str__ methods using the tabulate package
 TABLE_FORMAT_OPTIONS: dict[str, Any] = {
-    "numalign": "center",
+    "numalign": "left",
     "stralign": "left",
     "floatfmt": "+.3f",
+    "intfmt": "d",
     "tablefmt": "simple_outline",
 }
 
 
 class OrbitalManager(ABC):
-    """ This class contains methods for accessing information about orbitals which can be SFOs (symmetrized fragment orbitals) and MOs (molecular orbitals) """
+    """This class contains methods for accessing information about orbitals which can be SFOs (symmetrized fragment orbitals) and MOs (molecular orbitals)"""
 
 
 @attrs.define
 class MOManager(OrbitalManager):
-    """ This class contains methods for accessing information about molecular orbitals (MOs). """
+    """This class contains methods for accessing information about molecular orbitals (MOs)."""
+
     complex_mos: list[MO]
 
     def __str__(self):
@@ -42,16 +44,25 @@ class MOManager(OrbitalManager):
 
 @attrs.define
 class SFOManager(OrbitalManager):
-    """ This class contains methods for accessing information about symmetrized fragment orbitals (SFOs). """
+    """This class contains methods for accessing information about symmetrized fragment orbitals (SFOs)."""
+
     frag1_orbs: list[SFO]  # Is sorted by energy from HOMO-x -> LUMO+x
     frag2_orbs: list[SFO]  # Is reversed: LUMO+x -> HOMO-x
     overlap_matrix: Array2D[np.float64]
 
     def __str__(self):
-        frag1_orb_info = [
-            [orb.amsview_label, orb.homo_lumo_label, orb.energy, orb.gross_pop]
-            for orb in self.frag1_orbs
-        ]
+        sfo_overview_table = self.get_sfo_overview_table()
+
+        overlap_matrix_table = self.get_overlap_matrix_table()
+        overlap_str = "\n".join(["Overlap Matrix", format_message(OVERLAP_MATRIX_NOTE), overlap_matrix_table])
+
+        stabilization_matrix_table = self.get_stabilization_matrix_table()
+        stabilization_str = "\n".join(["Stabilization Matrix", format_message(STABILIZATION_MATRIX_NOTE), stabilization_matrix_table])
+
+        return f"{sfo_overview_table}\n\n{overlap_str})\n\n{stabilization_str}"
+
+    def get_sfo_overview_table(self):
+        frag1_orb_info = [[orb.amsview_label, orb.homo_lumo_label, orb.energy, orb.gross_pop] for orb in self.frag1_orbs]
 
         frag2_orb_info = [
             [orb.amsview_label, orb.homo_lumo_label, orb.energy, orb.gross_pop]
@@ -60,29 +71,22 @@ class SFOManager(OrbitalManager):
 
         combined_info = [frag1 + frag2 for frag1, frag2 in zip_longest(frag1_orb_info, frag2_orb_info, fillvalue=["", "", "", ""])]
 
-        headers = ["Fragment 1", "", "E (Ha)", "Popul"] + ["Fragment 2", "", "E (Ha)", "Popul"]
+        headers = ["Fragment 1", "", "E (Ha)", "Gross population"] + ["Fragment 2", "", "E (Ha)", "Gross population"]
         table = tabulate(tabular_data=combined_info, headers=headers, **TABLE_FORMAT_OPTIONS)
-
-        overlap_matrix_table = self.get_overlap_matrix_table()
-        overlap_str = "\n".join(["Overlap Matrix", format_message(OVERLAP_MATRIX_NOTE), overlap_matrix_table])
-
-        stabilization_matrix_table = self.get_stabilization_matrix_table()
-        stabilization_str = "\n".join(["Stabilization Matrix", format_message(STABILIZATION_MATRIX_NOTE), stabilization_matrix_table])
-
-        return f"{table}\n\n{overlap_str})\n\n{stabilization_str}"
+        return table
 
     def get_overlap_matrix_table(self):
-        """ Returns a table (str) of the overlap matrix """
+        """Returns a table (str) of the overlap matrix"""
         row_labels = [orb.homo_lumo_label for orb in self.frag1_orbs]
         column_labels = [orb.homo_lumo_label for orb in self.frag2_orbs]
 
         # Create a DataFrame from the overlap matrix
         df = pd.DataFrame(self.overlap_matrix, index=row_labels, columns=column_labels)
-        table = tabulate(df, headers='keys', **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
+        table = tabulate(df, headers="keys", **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
         return table
 
     def get_stabilization_matrix_table(self):
-        """ Calculates the stabilization matrix (S^2 / energy_gap) * 100 in units (au^2 / eV) and returns the matrix as a formatted string """
+        """Calculates the stabilization matrix (S^2 / energy_gap) * 100 in units (au^2 / eV) and returns the matrix as a formatted string"""
         row_labels = [orb.homo_lumo_label for orb in self.frag1_orbs]
         column_labels = [orb.homo_lumo_label for orb in self.frag2_orbs]
 
@@ -94,5 +98,5 @@ class SFOManager(OrbitalManager):
                 stabilization_matrix[i, j] = (overlap**2 / energy_gap) * 100
 
         df = pd.DataFrame(stabilization_matrix, index=row_labels, columns=column_labels)
-        table = tabulate(df, headers='keys', **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
+        table = tabulate(df, headers="keys", **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
         return table

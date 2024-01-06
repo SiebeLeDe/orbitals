@@ -1,0 +1,12 @@
+numpy
+gitpython
+plams
+attrs
+pandas
+
+[:python_version > "3.10"]
+importlib-metadata
+
+[dev]
+pytest
+sphinx

@@ -48,20 +48,22 @@ def create_calc_analyser(path_to_rkf_file: str | pl.Path, n_fragments: int = 2) 
     complex = create_complex(name=name, kf_file=kf_file, restricted_calc=calc_info.restricted)
 
     if calc_info.restricted:
-        fragments = [create_restricted_fragment(kf_file=kf_file, frag_index=i+1, calc_info=calc_info) for i in range(n_fragments)]
+        fragments = [create_restricted_fragment(kf_file=kf_file, frag_index=i + 1, calc_info=calc_info) for i in range(n_fragments)]
         return RestrictedCalcAnalyser(name=name, kf_file=kf_file, calc_info=calc_info, complex=complex, fragments=fragments)
 
-    fragments = [create_unrestricted_fragment(kf_file=kf_file, frag_index=i+1, calc_info=calc_info) for i in range(n_fragments)]
+    fragments = [create_unrestricted_fragment(kf_file=kf_file, frag_index=i + 1, calc_info=calc_info) for i in range(n_fragments)]
     return UnrestrictedCalcAnalyser(name=name, kf_file=kf_file, calc_info=calc_info, complex=complex, fragments=fragments)
 
 
 # --------------------Classes-------------------- #
+
 
 @attrs.define
 class CalcAnalyzer(ABC):
     """
     This class contains information about the orbitals present in the complex calculation
     """
+
     name: str
     calc_info: CalcInfo
     kf_file: KFFile
@@ -76,27 +78,27 @@ class CalcAnalyzer(ABC):
 
     @abstractmethod
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO) -> float:
-        """ Method that returns the overlap between two SFOs. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object. """
+        """Method that returns the overlap between two SFOs. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object."""
         pass
 
     @abstractmethod
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO) -> float:
-        """ Method that returns the gross population of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object. """
+        """Method that returns the gross population of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object."""
         pass
 
     @abstractmethod
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO) -> float:
-        """ Method that returns the orbital energy of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object."""
+        """Method that returns the orbital energy of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object."""
         pass
 
     @abstractmethod
     def get_sfo_occupation(self, fragment: int, sfo: str | SFO) -> float:
-        """ Method that returns the occupation of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object."""
+        """Method that returns the occupation of a SFO in a fragment. Format input: "[index]_[irrep]_[spin]" (spin only for unrestricted), or SFO object."""
         pass
 
     @abstractmethod
     def get_mo_orbitals(self, orb_range: tuple[int, int] = (-10, 10), irrep: str | None = None, spin: str | None = None) -> MOManager:
-        """ Method that returns (a part of) the molecular orbitals (MOs)."""
+        """Method that returns (a part of) the molecular orbitals (MOs)."""
         pass
 
     @abstractmethod
@@ -109,23 +111,18 @@ class RestrictedCalcAnalyser(CalcAnalyzer):
     """
     This class contains information about the complex calculation.
     """
+
     fragments: Sequence[RestrictedFragment] = attrs.field(default=list)
 
     def _get_sfo(self, sfo: str | SFO) -> SFO:
         return SFO.from_label(sfo) if isinstance(sfo, str) else sfo
 
     def _get_fragment(self, fragment: int):
-        return self.fragments[fragment-1]
+        return self.fragments[fragment - 1]
 
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO):
         sfo1, sfo2 = self._get_sfo(sfo1), self._get_sfo(sfo2)
-        return self._get_fragment(0).get_overlap(
-            kf_file=self.kf_file,
-            uses_symmetry=self.calc_info.symmetry,
-            irrep1=sfo1.irrep,
-            index1=sfo1.index,
-            irrep2=sfo2.irrep,
-            index2=sfo2.index)
+        return self._get_fragment(0).get_overlap(kf_file=self.kf_file, uses_symmetry=self.calc_info.symmetry, irrep1=sfo1.irrep, index1=sfo1.index, irrep2=sfo2.irrep, index2=sfo2.index)
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)
@@ -164,13 +161,14 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
     """
     This class contains information about the complex calculation.
     """
+
     fragments: Sequence[UnrestrictedFragment] = attrs.field(default=list)
 
     def _get_sfo(self, sfo: str | SFO) -> SFO:
         return SFO.from_label(sfo) if isinstance(sfo, str) else sfo
 
     def _get_fragment(self, fragment: int):
-        return self.fragments[fragment-1]
+        return self.fragments[fragment - 1]
 
     def get_sfo_overlap(self, sfo1: str | SFO, sfo2: str | SFO):
         sfo1, sfo2 = self._get_sfo(sfo1), self._get_sfo(sfo2)
@@ -178,13 +176,8 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
             return 0.0
 
         return self._get_fragment(0).get_overlap(
-            kf_file=self.kf_file,
-            uses_symmetry=self.calc_info.symmetry,
-            irrep1=sfo1.irrep,
-            index1=sfo1.index,
-            irrep2=sfo2.irrep,
-            index2=sfo2.index,
-            spin=sfo1.spin)
+            kf_file=self.kf_file, uses_symmetry=self.calc_info.symmetry, irrep1=sfo1.irrep, index1=sfo1.index, irrep2=sfo2.irrep, index2=sfo2.index, spin=sfo1.spin
+        )
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)

@@ -8,12 +8,14 @@ from orb_analysis.orb_functions.sfo_functions import get_frozen_cores_per_irrep,
 
 # --------------------Helper Functions-------------------- #
 
+
 def flatten_data(data: RestrictedProperty, ordered_irreps: list[str]) -> Array1D[np.float64]:
-    """ Flattens the data from a dictionary with {irrep: [data]} to a list with [data]."""
+    """Flattens the data from a dictionary with {irrep: [data]} to a list with [data]."""
     try:
         return np.concatenate([data[irrep] for irrep in ordered_irreps])
     except KeyError:
         return data["A"]  # When the complex has has "nosym"
+
 
 # --------------------Interface Function(s)-------------------- #
 
@@ -64,6 +66,7 @@ def create_unrestricted_fragment_data(kf_file: KFFile, frag_index: int):
     new_fragment_data = UnrestrictedFragmentData(name=frag_name, frag_index=frag_index, n_frozen_cores_per_irrep=n_frozen_cores_per_irrep, **data_dic_to_be_unpacked, frag_irreps=frag_irreps)
     return new_fragment_data
 
+
 # --------------------Fragment Data Classes -------------------- #
 
 
@@ -78,6 +81,7 @@ class FragmentData(ABC):
 
     See the specific fragment classes for more information about the format of data stored in the dictionaries.
     """
+
     name: str
     frag_index: int  # 1 or 2
     orb_energies: RestrictedProperty
@@ -141,6 +145,7 @@ class UnrestrictedFragmentData(FragmentData):
 
         The frozen cores per irrep format remains the same
     """
+
     orb_energies: UnrestrictedProperty
     gross_populations: UnrestrictedProperty
     occupations: UnrestrictedProperty
@@ -153,9 +158,10 @@ def main():
     set_printoptions(precision=3, suppress=True)
 
     current_dir = pl.Path(__file__).parent
-    rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs"
-    # rkf_file = 'restricted_largecore_differentfragsym_c4v_full.adf.rkf'
-    rkf_file = 'unrestricted_largecore_fragsym_nosym_full.adf.rkf'
+    rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs" / "different_sym"
+
+    rkf_file = "restricted_largecore_differentfragsym_c4v_full_full.adf.rkf"
+    # rkf_file = "unrestricted_largecore_fragsym_nosym_full.adf.rkf"
     kf_file = KFFile(str(rkf_dir / rkf_file))
 
     data = create_restricted_fragment_data(frag_index=2, kf_file=kf_file)
