@@ -4,7 +4,7 @@ import attrs
 from tabulate import tabulate
 from orb_analysis.custom_types import Array2D
 import numpy as np
-from orb_analysis.log_messages import OVERLAP_MATRIX_NOTE, STABILIZATION_MATRIX_NOTE, format_message
+from orb_analysis.log_messages import INTERACTION_MATRIX_NOTE, OVERLAP_MATRIX_NOTE, format_message
 from orb_analysis.orbital.orbital import MO, SFO
 import pandas as pd
 from itertools import zip_longest
@@ -56,10 +56,10 @@ class SFOManager(OrbitalManager):
         overlap_matrix_table = self.get_overlap_matrix_table()
         overlap_str = "\n".join(["Overlap Matrix", format_message(OVERLAP_MATRIX_NOTE), overlap_matrix_table])
 
-        stabilization_matrix_table = self.get_stabilization_matrix_table()
-        stabilization_str = "\n".join(["Stabilization Matrix", format_message(STABILIZATION_MATRIX_NOTE), stabilization_matrix_table])
+        sfo_interaction_matrix_table = self.get_sfo_interaction_matrix()
+        sfo_interaction_str = "\n".join(["SFO Interaction Matrix", format_message(INTERACTION_MATRIX_NOTE), sfo_interaction_matrix_table])
 
-        return f"{sfo_overview_table}\n\n{overlap_str})\n\n{stabilization_str}"
+        return f"{sfo_overview_table}\n\n{overlap_str})\n\n{sfo_interaction_str}"
 
     def get_sfo_overview_table(self):
         frag1_orb_info = [[orb.amsview_label, orb.homo_lumo_label, orb.energy, orb.gross_pop] for orb in self.frag1_orbs]
@@ -85,8 +85,32 @@ class SFOManager(OrbitalManager):
         table = tabulate(df, headers="keys", **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
         return table
 
-    def get_stabilization_matrix_table(self):
-        """Calculates the stabilization matrix (S^2 / energy_gap) * 100 in units (au^2 / eV) and returns the matrix as a formatted string"""
+    def get_sfo_interaction_matrix(self):
+        """
+        Calculates interaction matrix which is composed of:
+            1. The stabilization matrix (S^2 / energy_gap) * 100 in units (a.u.^2 / eV) for HOMO-LUMO interactions
+            2. The Pauli repulsion matrix (S^2) in units (a.u.^2) for HOMO-HOMO interactions
+            3. Zero matrix for LUMO-LUMO interactions
+
+        """
+
+        def calculate_matrix_element(sfo1: SFO, sfo2: SFO, overlap: float) -> float:
+            """Checks if the interaction is HOMO-HOMO / HOMO-LUMO / LUMO-LUMO and returns the correct value (see parent function docstring"""
+            # LUMO-LUMO non-physical
+            if not sfo1.is_occupied and not sfo2.is_occupied:
+                return 0.0
+
+            # HOMO-HOMO Pauli repulsion
+            if sfo1.is_occupied and sfo2.is_occupied:
+                return overlap**2 * 100
+
+            # HOMO-LUMO / LUMO-HOMO favorable orbital interactions (SCF process)
+            energy_gap: float = Units.convert(abs(frag1_orb.energy - frag2_orb.energy), "ha", "eV")  # type: ignore
+            if np.isclose(energy_gap, 0):
+                return overlap * 100
+            else:
+                return (overlap**2 / energy_gap) * 100
+
         row_labels = [orb.homo_lumo_label for orb in self.frag1_orbs]
         column_labels = [orb.homo_lumo_label for orb in self.frag2_orbs]
 
@@ -94,8 +118,7 @@ class SFOManager(OrbitalManager):
         for i, frag1_orb in enumerate(self.frag1_orbs):
             for j, frag2_orb in enumerate(self.frag2_orbs):
                 overlap = self.overlap_matrix[i, j]
-                energy_gap: float = Units.convert(abs(frag1_orb.energy - frag2_orb.energy), "ha", "eV")  # type: ignore
-                stabilization_matrix[i, j] = (overlap**2 / energy_gap) * 100
+                stabilization_matrix[i, j] = calculate_matrix_element(sfo1=frag1_orb, sfo2=frag2_orb, overlap=overlap)
 
         df = pd.DataFrame(stabilization_matrix, index=row_labels, columns=column_labels)
         table = tabulate(df, headers="keys", **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument

@@ -2,9 +2,25 @@
 
 ## Restricted Calculation
 
-For a restricted, fragsym, large core, c3v calculation of AsH3 + GeH3 (higher mass equivalent of NH3-BH3)
+For a restricted, fragsym, large core, c3v calculation of AsH3 + GeH3 (higher mass equivalent of NH3-BH3). Frag1 is AsH3 and Frag2 is GeH3.
 
 Reading the ("SFO popul", "sfo_grosspop") section in the adf.rkf file
+
+Number active SFOs per irrep
+| Frag1 Irrep   |   Frag1 # SFOs | Frag2 Irrep   |   Frag2 # SFOs |
+|:--------------|---------------:|:--------------|---------------:|
+| A1            |             17 | A1            |             25 |
+| A2            |              4 | A2            |              9 |
+| E1:1          |             18 | E1:1          |             31 |
+| E1:2          |             18 | E1:2          |             31 |
+
+Complex calculation frozen cores ("Symmetry", "ncbs")
+| Irrep   |   # Frozen cores |
+|:--------|-----------------:|
+| A1      |               30 |
+| A2      |                5 |
+| E1:1    |               24 |
+| E1:2    |               19 |
 
 ```python
    1, -0.000 --- A1 Frozen (16 sfos)
@@ -159,9 +175,25 @@ Reading the ("SFO popul", "sfo_grosspop") section in the adf.rkf file
 
 ## Unrestricted Calculation
 
-For a restricted, fragsym, large core, c3v calculation of AsH3 + GeH3 (higher mass equivalent of NH3-BH3)
+For a restricted, fragsym, large core, c3v calculation of AsH3 + GeH3 (higher mass equivalent of NH3-BH3). Frag1 is AsH3 and Frag2 is GeH3.
 
 Reading the ("SFO popul", "sfo_grosspop") section in the adf.rkf file
+
+Number active SFOs per irrep
+| Frag1 Irrep   |   Frag1 # SFOs | Frag2 Irrep   |   Frag2 # SFOs |
+|:--------------|---------------:|:--------------|---------------:|
+| A1            |             44 | A1            |             26 |
+| A2            |             23 | A2            |              9 |
+| E1:1          |             64 | E1:1          |             32 |
+| E1:2          |             64 | E1:2          |             32 |
+
+Complex calculation frozen cores ("Symmetry", "ncbs")
+| Irrep   |   # Frozen cores |
+|:--------|-----------------:|
+| A1      |               15 |
+| A2      |                0 |
+| E1:1    |               11 |
+| E1:2    |                8 |
 
 ```python
 1 -0.00002 --- A: A1 Frozen (15 sfos)
@@ -828,6 +860,7 @@ For a restricted, different fragsym, large core, c4v calculation of FeCO5 (c4v) 
 
 Reading the ("SFO popul", "sfo_grosspop") section in the adf.rkf file
 
+Number active SFOs per irrep
 | Frag1 Irrep   |   Frag1 # SFOs | Frag2 Irrep   | Frag2 # SFOs   |
 |:--------------|---------------:|:--------------|:---------------|
 | SIGMA         |             16 | A1            | 56             |
@@ -838,6 +871,7 @@ Reading the ("SFO popul", "sfo_grosspop") section in the adf.rkf file
 | PI:y          |             10 | E1:2          | 66             |
 | PHI:3x2y-y3   |              2 |               |                |
 
+Complex calculation frozen cores ("Symmetry", "ncbs")
 | Irrep   |   # Frozen cores |
 |:--------|-----------------:|
 | A1      |               17 |

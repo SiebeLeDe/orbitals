@@ -29,6 +29,7 @@ import numpy as np
 from scm.plams import KFFile
 
 from orb_analysis.custom_types import Array1D, UnrestrictedPropertyDict, SpinTypes
+from itertools import zip_longest
 
 # --------------------Helper Function(s)-------------------- #
 
@@ -245,14 +246,11 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
     frag2_sfos = [[irrep, frags_sfo_irrep_sums[1][irrep]] for irrep in get_ordered_irreps_of_one_frag(kf_file, frag_index=2)]
 
     table_data = []
-    from itertools import zip_longest
 
     for (irrep1, n_sfos1), (irrep2, n_sfos2) in zip_longest(frag1_sfos, frag2_sfos, fillvalue=("", "")):
         table_data.append([irrep1, n_sfos1, irrep2, n_sfos2])
 
     print(tabulate(table_data, headers=header, tablefmt="pipe"))
-
-    from tabulate import tabulate
 
     header = [
         "Irrep",
@@ -310,7 +308,8 @@ def main():
     current_dir = pl.Path(__file__).parent
     rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs"
     # rkf_file = 'restricted_largecore_differentfragsym_c4v_full.adf.rkf'
-    rkf_file = "restricted_largecore_differentfragsym_c4v_full.adf.rkf"
+    # rkf_file = "restricted_largecore_differentfragsym_c4v_full.adf.rkf"
+    rkf_file = "unrestricted_largecore_fragsym_c3v_full.adf.rkf"
     kf_file = KFFile(str(rkf_dir / rkf_file))
 
     # print(get_orbital_energies(kf_file))

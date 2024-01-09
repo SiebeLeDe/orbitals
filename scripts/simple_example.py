@@ -12,9 +12,9 @@ np.set_printoptions(precision=5, suppress=True)
 path_to_rkf_file = pl.Path(
     "/Users/siebeld/Library/CloudStorage/OneDrive-VrijeUniversiteitAmsterdam/PhD/Scripting/local_packages/orbitals/test/fixtures/rkfs/restricted_largecore_fragsym_c3v_full.adf.rkf"
 )  # Path to the rkf file to be analyzed
-orb_range: tuple[int, int] = (4, 4)  # The range of orbitals to be analyzed (HOMO-X, LUMO+X with X the specified range)
-irrep: str | None = "A1"  # irrep such as "A1" (C3v) or "AA" (in Cs)
-spin: str = SpinTypes.B  # "A" or "B" | keep on SpinTypes.A for restricted
+orb_range: tuple[int, int] = (6, 6)  # The range of orbitals to be analyzed (HOMO-X, LUMO+X with X the specified range)
+irrep: str | None = None  # irrep such as "A1" (C3v) or "AA" (in Cs)
+spin: str = SpinTypes.A  # "A" or "B" | does only matter for unrestricted calculations
 
 
 # --------------------Main-------------------- #

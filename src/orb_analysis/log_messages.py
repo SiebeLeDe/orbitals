@@ -1,11 +1,17 @@
 ﻿""" Module containing messages for logging and providing feedback to the user. """
 import textwrap
 
-OVERLAP_MATRIX_NOTE = "Overlap is guaranteed 0.0 when the irreps do not match and when both are unoccupied [non-physical]. "
+OVERLAP_MATRIX_NOTE = "Overlap (S in arbitrary units [a.u.]) is guaranteed 0.0 when the irreps do not match and when both are unoccupied [LUMO-LUMO; non-physical]. "
 OVERLAP_MATRIX_NOTE += "HOMO-HOMO overlaps are related to Pauli repulsion, and HOMO-LUMO overlaps to stabilizing orbital interactions"
 
-STABILIZATION_MATRIX_NOTE = "calculated through (S^2 / energy gap * 100) with units (au^2 / eV). Higher is better with the assumption that the SFOs are *not* degenerate. "
-STABILIZATION_MATRIX_NOTE += "Otherwise, -S is the relevant indicator for the orbital interaction stabilization [Orbital Interactions in Chemistry, Albright, p24]."
+INTERACTION_MATRIX_NOTE = """
+SFO interaction matrix that contains the information for:
+1) HOMO-HOMO interactions: Pauli repulsion indicator; calculated through S^2 * 100 with units [au^2]. Higher means more Pauli repulsion.
+2) HOMO-LUMO interactions: favorable orbital interactions indicator (=SCF process); calculated through S^2 / energy gap * 100 with units [au^2 / eV].
+Higher is better with the assumption that the SFOs are *not* degenerate. Otherwise, -S * 100 is the relevant indicator for the orbital interaction stabilization.
+3) LUMO-LUMO interactions: simply 0.0 because they have no physical meaning in this Kohm-Sham MO fragment-based theory. Note: the "* 100" factor is just for easier reading.
+Source: Orbital Interactions in Chemistry, Albright, p24
+"""
 
 
 def format_message(text, width=130):

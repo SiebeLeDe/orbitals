@@ -1,2 +1,0 @@
-[console_scripts]
-orb_analysis = orb_analysis.main:main
