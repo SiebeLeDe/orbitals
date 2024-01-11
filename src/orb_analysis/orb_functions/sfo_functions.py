@@ -29,7 +29,6 @@ import numpy as np
 from scm.plams import KFFile
 
 from orb_analysis.custom_types import Array1D, UnrestrictedPropertyDict, SpinTypes
-from itertools import zip_longest
 
 # --------------------Helper Function(s)-------------------- #
 
@@ -233,34 +232,38 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
     frozen_core_per_irrep = get_frozen_cores_per_irrep(kf_file, frag_index=frag_index)
 
     raw_gross_pop_all_sfos = np.array(kf_file.read("SFO popul", "sfo_grosspop"))
-    from tabulate import tabulate
 
-    header = [
-        "Frag1 Irrep",
-        "Frag1 # SFOs",
-        "Frag2 Irrep",
-        "Frag2 # SFOs",
-    ]
+    # Table writing (comment out if not needed)
 
-    frag1_sfos = [[irrep, frags_sfo_irrep_sums[0][irrep]] for irrep in get_ordered_irreps_of_one_frag(kf_file, frag_index=1)]
-    frag2_sfos = [[irrep, frags_sfo_irrep_sums[1][irrep]] for irrep in get_ordered_irreps_of_one_frag(kf_file, frag_index=2)]
+    # header = [
+    #     "Frag1 Irrep",
+    #     "Frag1 # SFOs",
+    #     "Frag2 Irrep",
+    #     "Frag2 # SFOs",
+    # ]
 
-    table_data = []
+    # frag1_sfos = [[irrep, frags_sfo_irrep_sums[0][irrep]] for irrep in get_ordered_irreps_of_one_frag(kf_file, frag_index=1)]
+    # frag2_sfos = [[irrep, frags_sfo_irrep_sums[1][irrep]] for irrep in get_ordered_irreps_of_one_frag(kf_file, frag_index=2)]
 
-    for (irrep1, n_sfos1), (irrep2, n_sfos2) in zip_longest(frag1_sfos, frag2_sfos, fillvalue=("", "")):
-        table_data.append([irrep1, n_sfos1, irrep2, n_sfos2])
+    # table_data = []
 
-    print(tabulate(table_data, headers=header, tablefmt="pipe"))
+    # for (irrep1, n_sfos1), (irrep2, n_sfos2) in zip_longest(frag1_sfos, frag2_sfos, fillvalue=("", "")):
+    #     table_data.append([irrep1, n_sfos1, irrep2, n_sfos2])
 
-    header = [
-        "Irrep",
-        "# Frozen cores",
-    ]
-    frozen_cores = [[irrep, n_frozen_cores] for irrep, n_frozen_cores in frozen_core_per_irrep.items()]
+    # print(tabulate(table_data, headers=header, tablefmt="pipe"))
 
-    print(tabulate(frozen_cores, headers=header, tablefmt="pipe"))
-    print(get_ordered_irreps_of_one_frag(kf_file, frag_index=1))
-    print(get_ordered_irreps_of_one_frag(kf_file, frag_index=2))
+    # header = [
+    #     "Irrep",
+    #     "# Frozen cores",
+    # ]
+    # frozen_cores = [[irrep, n_frozen_cores] for irrep, n_frozen_cores in frozen_core_per_irrep.items()]
+
+    # print(tabulate(frozen_cores, headers=header, tablefmt="pipe"))
+    # print(get_ordered_irreps_of_one_frag(kf_file, frag_index=1))
+    # print(get_ordered_irreps_of_one_frag(kf_file, frag_index=2))
+
+    # Table writing (comment out if not needed)
+
     if not symmetry_used:
         start_index = sum(frozen_core_per_irrep.values())
         total_sfo_sum_frag1 = sum(frags_sfo_irrep_sums[0][irrep] for irrep in frags_sfo_irrep_sums[0])
