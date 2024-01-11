@@ -1,17 +1,16 @@
 ﻿""" Module containing messages for logging and providing feedback to the user. """
 import textwrap
 
+from orb_analysis.custom_types import SFOInteractionTypes
+
+
 OVERLAP_MATRIX_NOTE = "Overlap (S in arbitrary units [a.u.]) is guaranteed 0.0 when the irreps do not match and when both are unoccupied [LUMO-LUMO; non-physical]. "
 OVERLAP_MATRIX_NOTE += "HOMO-HOMO overlaps are related to Pauli repulsion, and HOMO-LUMO overlaps to stabilizing orbital interactions"
 
-INTERACTION_MATRIX_NOTE = """
-SFO interaction matrix that contains the information for:
-1) HOMO-HOMO interactions: Pauli repulsion indicator; calculated through S^2 * 100 with units [au^2]. Higher means more Pauli repulsion.
-2) HOMO-LUMO interactions: favorable orbital interactions indicator (=SCF process); calculated through S^2 / energy gap * 100 with units [au^2 / eV].
-Higher is better with the assumption that the SFOs are *not* degenerate. Otherwise, -S * 100 is the relevant indicator for the orbital interaction stabilization.
-3) LUMO-LUMO interactions: simply 0.0 because they have no physical meaning in this Kohm-Sham MO fragment-based theory. Note: the "* 100" factor is just for easier reading.
-Source: Orbital Interactions in Chemistry, Albright, p24
-"""
+INTERACTION_MATRIX_NOTE = "SFO interaction matrix that contains the information for:"
+HOMO_HOMO_INTERACTION_NOTE = "HOMO-HOMO interactions: Pauli repulsion indicator; calculated through S^2 * 100 with units [au^2]. Higher means more Pauli repulsion."
+HOMO_LUMO_INTERACTION_NOTE = "HOMO-LUMO or LUMO-HOMO interactions: favorable orbital interactions indicator (=SCF process); calculated through S^2 / energy gap * 100 with units [au^2 / eV]."
+SFO_ORDER_NOTE = "Fragment 1 SFOs are on the vertical; Fragment 2 SFOs are on the horizontal"
 
 
 def format_message(text, width=130):
@@ -55,3 +54,12 @@ def calc_analyzer_call_message(restricted: bool, calc_name: str, orb_range: tupl
     log_message += _get_orb_range_message(orb_range) + " "
     log_message += _get_spin_message(spin)
     return header_message + format_message(log_message, 130) + "\n"
+
+
+def interaction_matrix_message(interaction_type: SFOInteractionTypes) -> list[str]:
+    if interaction_type == SFOInteractionTypes.HOMO_HOMO:
+        return ["\n\nSFO Pauli Repulsion Matrix (HOMO-HOMO)", HOMO_HOMO_INTERACTION_NOTE + SFO_ORDER_NOTE]
+    elif (interaction_type == SFOInteractionTypes.HOMO_LUMO) or (interaction_type == SFOInteractionTypes.LUMO_HOMO):
+        return ["\n\nSFO Orbital Interaction Matrix (HOMO-LUMO/LUMO-HOMO)", HOMO_LUMO_INTERACTION_NOTE + SFO_ORDER_NOTE]
+    else:
+        return ["", ""]
