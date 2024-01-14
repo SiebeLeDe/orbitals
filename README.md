@@ -1,6 +1,6 @@
 # Orb_analysis
 
-[![Testing](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_python_versions.yml/badge.svg)](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_python_versions.yml.yml)
+[![Testing](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_python_versions.yml/badge.svg)](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_python_versions.yml)
 
 <!-- [![Documentation](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_docs.yml/badge.svg)](https://github.com/SiebeLeDe/orbitals/actions/workflows/build_docs.yml) -->
 
