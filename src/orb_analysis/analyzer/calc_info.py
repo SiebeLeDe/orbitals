@@ -7,6 +7,7 @@ class CalcInfo:
     """
     This class contains information about the orbitals present in the complex calculation
     """
+
     kf_file: KFFile
     restricted: bool = True
     relativistic: bool = False

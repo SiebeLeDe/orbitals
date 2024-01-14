@@ -8,11 +8,7 @@ import attrs
 
 from orb_analysis.custom_types import SpinTypes
 
-OCCUPATION_TO_LABEL: dict[float, str] = {
-    0.0: "LUMO",
-    1.0: "SOMO",
-    2.0: "HOMO"
-}
+OCCUPATION_TO_LABEL: dict[float, str] = {0.0: "LUMO", 1.0: "SOMO", 2.0: "HOMO"}
 
 
 @attrs.define
@@ -20,6 +16,7 @@ class Orbital(ABC):
     """
     Abstract class that contains information about an orbital. This class should not be instantiated directly.
     """
+
     index: int
     irrep: str
     spin: str
@@ -27,9 +24,9 @@ class Orbital(ABC):
     occupation: float = -1.0
     homo_lumo_index: int = 1000  # Displays either HOMO-[x] or LUMO+[x]
 
-#  ------------------------------------------------------------------
-# ---------------------- Shared Classmethods ------------------------
-#  ------------------------------------------------------------------
+    #  ------------------------------------------------------------------
+    # ---------------------- Shared Classmethods ------------------------
+    #  ------------------------------------------------------------------
 
     @classmethod
     def from_label(cls, label: str):
@@ -42,9 +39,9 @@ class Orbital(ABC):
         spin = spin[0] if spin else SpinTypes.A
         return cls(index=int(index), irrep=irrep, spin=spin)
 
-#  ------------------------------------------------------------------
-# ------------------ Shared Property Methods ------------------------
-#  ------------------------------------------------------------------
+    #  ------------------------------------------------------------------
+    # ------------------ Shared Property Methods ------------------------
+    #  ------------------------------------------------------------------
 
     @property
     def is_occupied(self) -> bool:
@@ -52,7 +49,7 @@ class Orbital(ABC):
 
     @property
     def homo_lumo_label(self) -> str:
-        """ Returns the label in the format HOMO(-x), SOMO(-x) / SOMO(+x), or LUMO(+x) """
+        """Returns the label in the format HOMO(-x), SOMO(-x) / SOMO(+x), or LUMO(+x)"""
         ret_str = OCCUPATION_TO_LABEL[round(self.occupation)]
 
         if self.is_occupied:
@@ -66,9 +63,9 @@ class Orbital(ABC):
     def amsview_label(self) -> str:
         pass
 
-# -------------------------------------------------------------------
-# ------------------------ Magic Methods ----------------------------
-# -------------------------------------------------------------------
+    # -------------------------------------------------------------------
+    # ------------------------ Magic Methods ----------------------------
+    # -------------------------------------------------------------------
 
     @abstractmethod
     def __eq__(self, __value: str | SFO) -> bool:
@@ -84,21 +81,18 @@ class SFO(Orbital):
     Also possible is to initialize the class with a label. The correct format of the label is:
     <index>_<irrep or <index>_<irrep>_<spin> if the SFO is from an unrestricted calculation.
     """
+
     gross_pop: float = 1000.0
 
     def __eq__(self, __value: str | SFO) -> bool:
         if isinstance(__value, str):
             return self == SFO.from_label(__value)
         else:
-            return (
-                self.index == __value.index
-                and self.irrep == __value.irrep
-                and self.spin == __value.spin
-            )
+            return self.index == __value.index and self.irrep == __value.irrep and self.spin == __value.spin
 
     @property
     def amsview_label(self) -> str:
-        """ Returns the orbital label that can be used for AMSView plotting """
+        """Returns the orbital label that can be used for AMSView plotting"""
         return f"SFO_{self.irrep}_{self.index}_{self.spin}"
 
 
@@ -115,15 +109,11 @@ class MO(Orbital):
         if isinstance(__value, str):
             return self == SFO.from_label(__value)
         else:
-            return (
-                self.index == __value.index
-                and self.irrep == __value.irrep
-                and self.spin == __value.spin
-            )
+            return self.index == __value.index and self.irrep == __value.irrep and self.spin == __value.spin
 
     @property
     def amsview_label(self) -> str:
-        """ Returns the orbital label that can be used for AMSView plotting """
+        """Returns the orbital label that can be used for AMSView plotting"""
         return f"SCF_{self.irrep}_{self.index}_{self.spin}"
 
 

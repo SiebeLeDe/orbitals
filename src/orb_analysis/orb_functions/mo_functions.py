@@ -30,8 +30,9 @@ from orb_analysis.custom_types import Array1D, SpinTypes
 
 # -------------------Low-level KF reading -------------------- #
 
+
 def uses_symmetry(kf_file: KFFile) -> bool:
-    """ Returns True if the complex calculation uses symmetry for its MOs and other parts such as gross populations and overlap. """
+    """Returns True if the complex calculation uses symmetry for its MOs and other parts such as gross populations and overlap."""
     grouplabel = kf_file.read("Symmetry", "grouplabel").split()  # type: ignore
 
     if grouplabel[0].lower() == "nosym":
@@ -40,13 +41,13 @@ def uses_symmetry(kf_file: KFFile) -> bool:
 
 
 def get_irreps(kf_file: KFFile) -> list[str]:
-    """ Returns the ordered symlabels of *active* MOs (frozen core MOs excluded) with the symmetry for MO labeling. """
+    """Returns the ordered symlabels of *active* MOs (frozen core MOs excluded) with the symmetry for MO labeling."""
     irreps = kf_file.read("Symmetry", "symlab", return_as_list=True).split()  # type: ignore
     return irreps
 
 
 def get_number_MOs_per_irrep_per_frag(kf_file: KFFile, spin: str = "A") -> OrderedDict[str, int]:
-    """ Returns the number of *active* SFOs of each irrep (frozen core SFOs excluded) belonging to one fragment. """
+    """Returns the number of *active* SFOs of each irrep (frozen core SFOs excluded) belonging to one fragment."""
     irreps = get_irreps(kf_file)
     sfo_sym_label_sum = OrderedDict({irrep: 0 for irrep in set(irreps)})
     for irrep in irreps:
@@ -55,6 +56,7 @@ def get_number_MOs_per_irrep_per_frag(kf_file: KFFile, spin: str = "A") -> Order
 
 
 # --------------------Frozen Core Handling-------------------- #
+
 
 def get_frozen_cores_per_irrep(kf_file: KFFile) -> dict[str, int]:
     """
@@ -69,11 +71,12 @@ def get_frozen_cores_per_irrep(kf_file: KFFile) -> dict[str, int]:
 
     return frozen_core_per_irrep
 
+
 # -------------------Property Function(s)-------------------- #
 
 
 def read_MO_energies(kf_file: KFFile, irrep: str, spin: str) -> Array1D[np.float64]:
-    """ Reads the molecular orbital energies from the KFFile. """
+    """Reads the molecular orbital energies from the KFFile."""
     # escale refers energies scaled by relativistic effects (ZORA). If no relativistic effects are present, "energy" is the appropriate key.
     variable = f"escale_{spin}"
     if (irrep, f"escale_{spin}") not in kf_file:
@@ -86,7 +89,7 @@ def read_MO_energies(kf_file: KFFile, irrep: str, spin: str) -> Array1D[np.float
 
 
 def read_MO_occupations(kf_file: KFFile, irrep: str, spin: str) -> Array1D[np.float64]:
-    """ Reads the molecular orbital occupations from the KFFile. """
+    """Reads the molecular orbital occupations from the KFFile."""
     occupations = np.array(kf_file.read(irrep, f"froc_{spin}"))  # type: ignore
     return occupations
 
