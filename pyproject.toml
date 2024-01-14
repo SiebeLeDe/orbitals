@@ -1,6 +1,17 @@
 [build-system]
-requires = ["setuptools==68.2.2", "setuptools-git-versioning"]
+requires = [
+    "setuptools>=68.2.2",
+    "wheel",
+    "gitpython",
+    "setuptools-git-versioning",
+]
 build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 200
+
+[tool.setuptools-git-versioning]
+enabled = true
+template = "{tag}"
+dev_template = "{tag}"
+dirty_template = "{tag}"
