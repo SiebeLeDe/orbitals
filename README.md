@@ -24,7 +24,7 @@ There are several ways to install the python package:
   ``pip install -e .``
 - [X] PyPI: ``pip install orb_analysis``
 
-The required python environment is taken care of by the package manager. Note that you should have a working python environment with the required dependencies installed. See the [setup configuration file](setup.cfg) for a list of dependencies. I recommend using [conda](https://docs.conda.io/en/latest/) to manage your python environment.
+The required python environment is taken care of by the package manager. Note that you should have a working python environment with the required dependencies installed. See the [setup configuration file](setup.cfg) for a list of dependencies. I recommend using [conda](https://docs.conda.io/en/latest/) to manage your python environment with python version 3.10 or higher.
 
 Furthermore, please make sure that you have the AMS software installed and that the amsview and amsreport programs are available in your path. The package is tested with AMS2023.204.
 
@@ -75,7 +75,7 @@ This package is licensed under the [MIT License](LICENSE.txt).
 
 ## How to cite
 
-Lekanne Deprez, S.J., orb_analysis, 2023, https://github.com/SiebeLeDe/orbitals
+Lekanne Deprez, S.J., orb_analysis, 2023, <https://github.com/SiebeLeDe/orbitals>
 
 ## How to contribute
 
