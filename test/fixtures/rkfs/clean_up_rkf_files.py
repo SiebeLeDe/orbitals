@@ -14,13 +14,13 @@ SECTION_PATTERNS = [
 
 
 def get_rkf_files(path: str | pl.Path) -> list[pl.Path]:
-    """ Returns a list of all RKF files in the directory. """
+    """Returns a list of all RKF files in the directory."""
     path = pl.Path(path) if isinstance(path, str) else path
     return [f for f in path.glob("*.rkf")]
 
 
 def get_sections_to_remove(kf_file: KFFile) -> list[str]:
-    """ Returns a list of all sections in the RKF file that are not needed for the tests. """
+    """Returns a list of all sections in the RKF file that are not needed for the tests."""
     sections = list(kf_file.get_skeleton().keys())
     remove_sections = [section for section in sections if section in REMOVE_SECTIONS]
     for pattern in SECTION_PATTERNS:
@@ -29,7 +29,7 @@ def get_sections_to_remove(kf_file: KFFile) -> list[str]:
 
 
 def remove_sections(kf_file: KFFile, sections_to_be_removed: Sequence[str], name: str) -> None:
-    """ Removes all sections in the RKF file that are not needed for the tests. """
+    """Removes all sections in the RKF file that are not needed for the tests."""
     print(f"Removing sections: {sections_to_be_removed} in {name}")
     for section in sections_to_be_removed:
         kf_file.delete_section(section)

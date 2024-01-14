@@ -4,12 +4,12 @@ from orb_analysis.analyzer.calc_analyzer import create_calc_analyser  # replace 
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Parser for the adf.rkf file to analyze.')
-    parser.add_argument('--file', type=str, help='The calculation file (adf.rkf) to analyze')
-    parser.add_argument('--spin', type=str, help='The spin to analyze. Options are "A" and "B"', required=False)
-    parser.add_argument('--orb_range', type=int, nargs=2, help='The range of orbitals to analyze from HOMO-x - LUMO+x, e.g. --orb_range 5, 5', required=False)
-    parser.add_argument('--irrep', type=str, help='The irrep to analyze', required=False)
-    parser.add_argument('--output_file', type=str, help='Path to the output file', required=False)
+    parser = argparse.ArgumentParser(description="Parser for the adf.rkf file to analyze.")
+    parser.add_argument("--file", type=str, help="The calculation file (adf.rkf) to analyze")
+    parser.add_argument("--spin", type=str, help='The spin to analyze. Options are "A" and "B"', required=False)
+    parser.add_argument("--orb_range", type=int, nargs=2, help="The range of orbitals to analyze from HOMO-x - LUMO+x, e.g. --orb_range 5, 5", required=False)
+    parser.add_argument("--irrep", type=str, help="The irrep to analyze", required=False)
+    parser.add_argument("--output_file", type=str, help="Path to the output file", required=False)
 
     args = parser.parse_args()
 

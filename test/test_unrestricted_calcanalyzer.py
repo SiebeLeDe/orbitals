@@ -15,7 +15,6 @@ The tests are based on the calculations with the molecule Me3Ge-H + H-CCl3 (heav
 Note: this module only contains unrestricted calculations.
 """
 import pathlib as pl
-
 import pytest
 from orb_analysis.analyzer.calc_analyzer import CalcAnalyzer, create_calc_analyser
 
@@ -26,42 +25,42 @@ fixtures_dir = current_dir / "fixtures" / "rkfs"
 @pytest.fixture()
 def calc_analyzer_unrestricted_nocore_fragsym_c3v() -> CalcAnalyzer:
     """Returns a CalcAnalyzer instance of a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
-    rkf_path = fixtures_dir / 'unrestricted_nocore_fragsym_c3v_full.adf.rkf'
+    rkf_path = fixtures_dir / "unrestricted_nocore_fragsym_c3v_full.adf.rkf"
     return create_calc_analyser(rkf_path)
 
 
 @pytest.fixture()
 def calc_analyzer_unrestricted_largecore_fragsym_c3v() -> CalcAnalyzer:
     """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
-    rkf_path = fixtures_dir / 'unrestricted_largecore_fragsym_c3v_full.adf.rkf'
+    rkf_path = fixtures_dir / "unrestricted_largecore_fragsym_c3v_full.adf.rkf"
     return create_calc_analyser(rkf_path)
 
 
 @pytest.fixture()
 def calc_analyzer_unrestricted_nocore_fragsym_nosym() -> CalcAnalyzer:
     """Returns a CalcAnalyzer instance of a unrestricted, no frozen core, fragment symmetry, no symmetry calculation."""
-    rkf_path = fixtures_dir / 'unrestricted_nocore_fragsym_nosym_full.adf.rkf'
+    rkf_path = fixtures_dir / "unrestricted_nocore_fragsym_nosym_full.adf.rkf"
     return create_calc_analyser(rkf_path)
 
 
 @pytest.fixture()
 def calc_analyzer_non_relativistic() -> CalcAnalyzer:
     """Returns a CalcAnalyzer instance of a non-relativistic, unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
-    rkf_path = fixtures_dir / 'unrestricted_largecore_fragsym_c3v_nonrelativistic_full.adf.rkf'
+    rkf_path = fixtures_dir / "unrestricted_largecore_fragsym_c3v_nonrelativistic_full.adf.rkf"
     return create_calc_analyser(rkf_path)
 
 
 @pytest.fixture()
 def calc_analyzer_unrestricted_largecore_nosym() -> CalcAnalyzer:
     """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, no fragment symmetry, no symmetry calculation."""
-    rkf_path = fixtures_dir / 'unrestricted_largecore_nofragsym_nosym_full.adf.rkf'
+    rkf_path = fixtures_dir / "unrestricted_largecore_nofragsym_nosym_full.adf.rkf"
     return create_calc_analyser(rkf_path)
 
 
 @pytest.fixture()
 def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
     """Returns a CalcAnalyzer instance of a unrestricted, large frozen core, different fragment symmetry (Clin + C4v), c4v complex symmetry calculation."""
-    rkf_path = fixtures_dir / 'unrestricted_largecore_differentfragsym_c4v_full.adf.rkf'
+    rkf_path = fixtures_dir / "unrestricted_largecore_differentfragsym_c4v_full.adf.rkf"
     return create_calc_analyser(rkf_path)
 
 
@@ -93,7 +92,7 @@ def calc_analyzer_unrestricted_largecore_differentfragsym_c4v() -> CalcAnalyzer:
 
 
 def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-    """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
+    """Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
     frag1_energy_A = analyzer.get_sfo_orbital_energy(1, "4_A1_A")
     frag2_energy_A = analyzer.get_sfo_orbital_energy(2, "4_A1_A")
@@ -106,7 +105,7 @@ def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v(calc_analyzer
 
 
 def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v_degenerate(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-    """ Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
+    """Tests the `get_sfo_orbital_energy` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation ."""
     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
     frag1_energy_A1 = analyzer.get_sfo_orbital_energy(1, "5_E1:1_A")
     frag1_energy_A2 = analyzer.get_sfo_orbital_energy(1, "5_E1:2_A")
@@ -188,7 +187,7 @@ def test_get_sfo_orbital_energy_unrestricted_largecore_fragsym_c3v_degenerate(ca
 
 
 def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-    """ Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    """Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
     frag1_pop_A = analyzer.get_sfo_gross_population(1, "4_A1_A")
     frag2_pop_A = analyzer.get_sfo_gross_population(2, "4_A1_A")
@@ -202,7 +201,7 @@ def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v(calc_analyz
 
 
 def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v_degenerate(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-    """ Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    """Tests the `get_sfo_gross_population` method for a unrestricted, large frozen core, fragment symmetry, c3v complex symmetry calculation."""
     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
     frag1_pop_1A = analyzer.get_sfo_gross_population(1, "5_E1:1_A")
     frag1_pop_2A = analyzer.get_sfo_gross_population(1, "5_E1:2_A")
@@ -283,7 +282,7 @@ def test_get_sfo_gross_population_unrestricted_largecore_fragsym_c3v_degenerate(
 
 
 def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A1(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-    """ Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    """Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
     homo_lumo_overlap_A = analyzer.get_sfo_overlap("4_A1_A", "4_A1_A")
     homo_homo_overlap_A = analyzer.get_sfo_overlap("3_E1:1_A", "4_E1:1_A")
@@ -296,7 +295,7 @@ def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A1(calc_analyzer_unr
 
 
 def test_get_sfo_overlap_unrestricted_largecore_fragsym_c3v_A2(calc_analyzer_unrestricted_largecore_fragsym_c3v):
-    """ Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
+    """Tests the `get_sfo_overlap` method for a unrestricted, no frozen core, fragment symmetry, c3v complex symmetry calculation."""
     analyzer = calc_analyzer_unrestricted_largecore_fragsym_c3v
     homo_lumo_overlap_A = analyzer.get_sfo_overlap("5_A2_A", "2_A2_A")
     homo_lumo_overlap_B = analyzer.get_sfo_overlap("5_A2_B", "2_A2_B")

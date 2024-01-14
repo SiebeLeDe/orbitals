@@ -41,18 +41,20 @@ def create_complex(name: str, kf_file: KFFile, restricted_calc: bool) -> Complex
 
 # --------------------Calc Info classes-------------------- #
 
+
 @attrs.define
 class Complex(ABC):
     """
     This class contains information about the complex calculation.
     """
+
     name: str
     kf_file: KFFile
     complex_data: ComplexData
 
     @abstractmethod
     def get_orbital_energy(self, irrep: str, index: int, spin: str) -> float:
-        """ Returns the orbital energy """
+        """Returns the orbital energy"""
         pass
 
     @abstractmethod
@@ -66,7 +68,7 @@ class Complex(ABC):
 
         # Then, flatten the data to a list of mos
         for irrep in self.complex_data.irreps:
-            for index, energy, occ in zip(range(1, len(orb_energies[irrep])+1), orb_energies[irrep], occupations[irrep]):
+            for index, energy, occ in zip(range(1, len(orb_energies[irrep]) + 1), orb_energies[irrep], occupations[irrep]):
                 mos.append(MO(index=index, irrep=irrep, spin=spin, energy=energy, occupation=occ))
 
         return filter_orbitals(mos, max_occupied_orbitals, max_unoccupied_orbitals, irreps)
@@ -82,10 +84,10 @@ class RestrictedComplex(Complex):
     """ This class contains methods for accessing information about the restricted molecular orbitals. """
 
     def get_orbital_energy(self, irrep: str, index: int, spin: str):
-        return self.complex_data.orb_energies[irrep][index-1]
+        return self.complex_data.orb_energies[irrep][index - 1]
 
     def get_occupation(self, irrep: str, index: int, spin: str):
-        return self.complex_data.occupations[irrep][index-1]
+        return self.complex_data.occupations[irrep][index - 1]
 
     def get_mos(self, orb_range: tuple[int, int], orb_irrep: str | None = None, spin: str | None = SpinTypes.A) -> list[MO]:
         # First get the data
@@ -96,14 +98,15 @@ class RestrictedComplex(Complex):
 
 
 class UnrestrictedComplex(Complex):
-    """ This class contains methods for accessing information about the unrestricted molecular orbitals. """
+    """This class contains methods for accessing information about the unrestricted molecular orbitals."""
+
     complex_data: UnrestrictedComplexData
 
     def get_orbital_energy(self, irrep: str, index: int, spin: str):
-        return self.complex_data.orb_energies[spin][irrep][index-1]
+        return self.complex_data.orb_energies[spin][irrep][index - 1]
 
     def get_occupation(self, irrep: str, index: int, spin: str):
-        return self.complex_data.occupations[spin][irrep][index-1]
+        return self.complex_data.occupations[spin][irrep][index - 1]
 
     def get_mos(self, orb_range: tuple[int, int], spin: str, orb_irrep: str | None = None) -> list[MO]:
         # First get the data

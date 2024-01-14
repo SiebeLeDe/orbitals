@@ -10,6 +10,7 @@ from orb_analysis.custom_types import RestrictedProperty, SpinTypes, Unrestricte
 
 # --------------------Interface Function(s)-------------------- #
 
+
 def create_complex_data(name: str, kf_file: KFFile, restricted_calc: bool) -> ComplexData:
     """
     Main function that the user could use to create a :ComplexData: object.
@@ -46,6 +47,7 @@ class ComplexData:
 
     See the specific :Complex: classes for more information about the format of data stored in the dictionaries.
     """
+
     name: str
     irreps: list[str]
     orb_energies: RestrictedProperty
@@ -54,7 +56,7 @@ class ComplexData:
 
 
 class RestrictedComplexData(ComplexData):
-    """ Stores data about molecular orbitals (MOs) from the rkf files. The data includes:
+    """Stores data about molecular orbitals (MOs) from the rkf files. The data includes:
         - Orbital Energies
         - Occupations
         - Number of frozen cores per irrep
@@ -68,7 +70,7 @@ class RestrictedComplexData(ComplexData):
 
 @attrs.define
 class UnrestrictedComplexData(ComplexData):
-    """ Stores data about molecular orbitals (MOs) in unrestricted format from the rkf files. The data includes:
+    """Stores data about molecular orbitals (MOs) in unrestricted format from the rkf files. The data includes:
         - Orbital Energies
         - Occupations
         - Number of frozen cores per irrep
@@ -86,5 +88,6 @@ class UnrestrictedComplexData(ComplexData):
             }
         - Number of frozen cores per irrep: {"IRREP1": n_frozen_cores, "IRREP2": n_frozen_cores, ...}
     """
+
     orb_energies: UnrestrictedProperty
     occupations: UnrestrictedProperty

@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import Enum, StrEnum, auto
 from typing import Annotated, Literal, TypeVar
 import numpy as np
 import numpy.typing as npt
@@ -22,3 +22,11 @@ UnrestrictedPropertyDict = TypeAlias = dict[str, dict[str, dict[str, Array1D[np.
 class SpinTypes(StrEnum):
     A = "A"
     B = "B"
+
+
+class SFOInteractionTypes(Enum):
+    """Enum class for the different types of SFO interactions"""
+
+    HOMO_HOMO = auto()
+    HOMO_LUMO = auto()
+    LUMO_HOMO = auto()
