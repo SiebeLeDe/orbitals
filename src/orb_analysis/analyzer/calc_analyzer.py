@@ -9,8 +9,6 @@ from typing import Sequence
 
 import attrs
 import numpy as np
-from scm.plams import KFFile
-
 from orb_analysis.analyzer.calc_info import CalcInfo
 from orb_analysis.complex.complex import Complex, create_complex
 from orb_analysis.custom_types import SpinTypes
@@ -18,6 +16,7 @@ from orb_analysis.fragment.fragment import Fragment, RestrictedFragment, Unrestr
 from orb_analysis.log_messages import calc_analyzer_call_message
 from orb_analysis.orbital.orbital import SFO
 from orb_analysis.orbital_manager.orb_manager import MOManager, SFOManager
+from scm.plams import KFFile
 
 # --------------------Interface Method(s)-------------------- #
 
