@@ -1,10 +1,11 @@
 ﻿from abc import ABC
+
 import attrs
 import numpy as np
-from orb_analysis.custom_types import Array1D, RestrictedProperty, UnrestrictedProperty, SpinTypes
 from scm.plams import KFFile
-from orb_analysis.orb_functions.sfo_functions import get_frozen_cores_per_irrep, get_gross_populations, get_fragment_properties, get_frag_name, get_ordered_irreps_of_one_frag
 
+from orb_analysis.custom_types import Array1D, RestrictedProperty, SpinTypes, UnrestrictedProperty
+from orb_analysis.orb_functions.sfo_functions import get_frag_name, get_fragment_properties, get_frozen_cores_per_irrep, get_gross_populations, get_ordered_irreps_of_one_frag
 
 # --------------------Helper Functions-------------------- #
 
@@ -90,6 +91,10 @@ class FragmentData(ABC):
     n_frozen_cores_per_irrep: dict[str, int]
     frag_irreps: list[str]
 
+    @property
+    def uses_frag_symmetry(self) -> bool:
+        return len(self.frag_irreps) > 1
+
 
 @attrs.define
 class RestrictedFragmentData(FragmentData):
@@ -153,6 +158,7 @@ class UnrestrictedFragmentData(FragmentData):
 
 def main():
     import pathlib as pl
+
     from numpy import set_printoptions
 
     set_printoptions(precision=3, suppress=True)

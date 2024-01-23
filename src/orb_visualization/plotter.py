@@ -2,12 +2,13 @@ import pathlib as pl
 import subprocess
 from typing import Optional
 
-from attrs import define, asdict
+from attrs import asdict, define
 
 
 @define
 class PlotSettings:
-    """ General plot settings used for amsreport """
+    """General plot settings used for amsreport"""
+
     bgcolor: str = "#ffffff"
     scmgeometry: str = "600x600"
     zoom: float = 1.5
@@ -17,10 +18,16 @@ class PlotSettings:
 
 @define
 class AMSViewPlotSettings(PlotSettings):
-    """ Plot settings for amsview. Inherits from PlotSettings """
+    """Plot settings for amsview. Inherits from PlotSettings"""
+
     wireframe: bool = False
-    transparent: bool = False
+    transparent: bool = True
     viewplane: str = "0 0 1"
+    colorfield: str = "100 299 321"  # No idea what this value should be
+    printrange: bool = True
+    camera: int = -1.0  # Camera load-outs from AMS
+    val: float = 0.03  # isovalue
+    ciso: bool = False
 
 
 def plot_orbital_with_amsview(
@@ -41,6 +48,13 @@ def plot_orbital_with_amsview(
             - zoom: The zoom level (float)
             - antialias: Whether to use antialiasing (bool)
             - viewplane: The viewplane normal to the specified x,y,z direction (three numbers for x,y,z e.g. "1 0 1")
+            - wireframe: Whether to use wireframe (bool)
+            - transparent: Whether to use transparency (bool)
+            - colorfield: The colorfield (three numbers for r,g,b e.g. "100 299 321")
+            - printrange: Whether to print the colour range (bool)
+            - camera: The camera load-outs from AMS (int)
+
+    Check for all options by running amsview -h
 
     Example command: amsview result.t41 -var SCF_A_8 -save "my_pic.png" -bgcolor "#FFFFFF" -transparent -antialias -scmgeometry "2160x1440" -wireframe
     """
@@ -52,9 +66,12 @@ def plot_orbital_with_amsview(
 
     dict_settings = asdict(plot_settings)
     for key, value in dict_settings.items():
-        if key.lower() in ["wireframe", "transparent", "antialias"]:
+        if key.lower() in ["wireframe", "transparent", "antialias", "printrange", "ciso"]:
             if value:
                 command.append(f"-{key}")
+            continue
+
+        if key.lower() == "camera" and not value > 0:
             continue
 
         command.append(f"-{key}")

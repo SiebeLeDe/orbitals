@@ -26,9 +26,8 @@ from __future__ import annotations
 from typing import Callable, Sequence
 
 import numpy as np
+from orb_analysis.custom_types import Array1D, SpinTypes, UnrestrictedPropertyDict
 from scm.plams import KFFile
-
-from orb_analysis.custom_types import Array1D, UnrestrictedPropertyDict, SpinTypes
 
 # --------------------Helper Function(s)-------------------- #
 
@@ -225,11 +224,11 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
             irrep (e.g., "A1", "B2", "E1:1"): [data]
     }
     """
-    symmetry_used = uses_symmetry(kf_file)
     frags_sfo_irrep_sums = [get_number_sfos_per_irrep_per_frag(kf_file, frag_index=frag_index) for frag_index in [1, 2]]
-
     ordered_irreps = get_ordered_irreps_of_one_frag(kf_file, frag_index=frag_index)
     frozen_core_per_irrep = get_frozen_cores_per_irrep(kf_file, frag_index=frag_index)
+    complex_has_symmetry = uses_symmetry(kf_file)  # refers to the complex calculation
+    frag_has_symmetry = len(ordered_irreps) > 1  # refers to the fragments
 
     raw_gross_pop_all_sfos = np.array(kf_file.read("SFO popul", "sfo_grosspop"))
 
@@ -264,7 +263,7 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
 
     # Table writing (comment out if not needed)
 
-    if not symmetry_used:
+    if not complex_has_symmetry and not frag_has_symmetry:  # no symmetry for both the complex nor the fragments
         start_index = sum(frozen_core_per_irrep.values())
         total_sfo_sum_frag1 = sum(frags_sfo_irrep_sums[0][irrep] for irrep in frags_sfo_irrep_sums[0])
         total_sfo_sum_frag2 = sum(frags_sfo_irrep_sums[1][irrep] for irrep in frags_sfo_irrep_sums[1])

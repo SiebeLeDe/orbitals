@@ -1,5 +1,6 @@
 import os
 import pathlib as pl
+
 import numpy as np
 from orb_analysis.analyzer.calc_analyzer import create_calc_analyser
 from orb_analysis.custom_types import SpinTypes

@@ -15,8 +15,9 @@ The tests are based on the calculations with the molecule AsH3 + GaCl3 (heavier 
 Note: this module only contains restricted calculations. The unrestricted calculations are tested in `test_unrestricted_calcanalyzer.py`
 """
 import pathlib as pl
+
 import pytest
-from orb_analysis.analyzer.calc_analyzer import create_calc_analyser, CalcAnalyzer
+from orb_analysis.analyzer.calc_analyzer import CalcAnalyzer, create_calc_analyser
 
 current_dir = pl.Path(__file__).parent
 fixtures_dir = current_dir / "fixtures" / "rkfs"
@@ -199,8 +200,12 @@ def test_get_sfo_gross_population_restricted_nocore_fragsym_nosym(calc_analyzer_
     analyzer = calc_analyzer_restricted_nocore_fragsym_nosym
     frag1_pop = analyzer.get_sfo_gross_population(1, "8_A1")
     frag2_pop = analyzer.get_sfo_gross_population(2, "14_A1")
+    frag1_pop2 = analyzer.get_sfo_gross_population(1, "6_E1:2")
+    frag2_pop2 = analyzer.get_sfo_gross_population(2, "14_E1:1")
     assert frag1_pop == pytest.approx(1.816, abs=1e-3)
     assert frag2_pop == pytest.approx(0.189, abs=1e-3)
+    assert frag1_pop2 == pytest.approx(0.027, abs=1e-3)
+    assert frag2_pop2 == pytest.approx(0.003, abs=1e-3)
 
 
 def test_get_sfo_gross_population_restricted_largecore_nosym(calc_analyzer_restricted_largecore_nosym):
@@ -272,9 +277,12 @@ def test_get_sfo_overlap_restricted_largecore_fragsym_c3v_A2(calc_analyzer_restr
 
 
 def test_get_sfo_overlap_restricted_nocore_fragsym_nosym(calc_analyzer_restricted_nocore_fragsym_nosym):
+    """Tests the `get_sfo_overlap` method for a restricted, no frozen core, fragment symmetry, no complex symmetry calculation."""
     analyzer = calc_analyzer_restricted_nocore_fragsym_nosym
     homo_lumo_overlap = analyzer.get_sfo_overlap("8_A1", "14_A1")
+    homo_lumo_overlap2 = analyzer.get_sfo_overlap("7_E1:2", "14_E1:2")
     assert homo_lumo_overlap == pytest.approx(0.4084, abs=1e-4)
+    assert homo_lumo_overlap2 == pytest.approx(-0.4845, abs=1e-4)
 
 
 def test_get_sfo_overlap_restricted_largecore_nosym(calc_analyzer_restricted_largecore_nosym):

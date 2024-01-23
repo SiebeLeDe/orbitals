@@ -7,14 +7,12 @@ from functools import lru_cache
 import attrs
 import numpy as np
 from scm.plams import KFFile
+
 from orb_analysis.analyzer.calc_info import CalcInfo
-
 from orb_analysis.custom_types import RestrictedProperty, SpinTypes
-
-from orb_analysis.fragment.fragmentdata import FragmentData, create_restricted_fragment_data, create_unrestricted_fragment_data, RestrictedFragmentData, UnrestrictedFragmentData
+from orb_analysis.fragment.fragmentdata import FragmentData, RestrictedFragmentData, UnrestrictedFragmentData, create_restricted_fragment_data, create_unrestricted_fragment_data
 from orb_analysis.orb_functions.orb_functions import filter_orbitals
 from orb_analysis.orbital.orbital import SFO
-
 
 # --------------------Interface Function(s)-------------------- #
 
@@ -225,7 +223,6 @@ class UnrestrictedFragment(Fragment):
         return self.fragment_data.occupations[spin][irrep][index - 1]
 
     def get_sfos(self, orbital_range: tuple[int, int], orb_irrep: str | None = None, spin: str = SpinTypes.A) -> list[SFO]:
-        # First get the data
         orb_energies = self.fragment_data.orb_energies[spin]
         gross_pop = self.fragment_data.gross_populations[spin]
         occupations = self.fragment_data.occupations[spin]

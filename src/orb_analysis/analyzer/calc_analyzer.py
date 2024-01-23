@@ -3,21 +3,21 @@ Module containing classes that stores information of the complex calculation in 
 """
 from __future__ import annotations
 
+import pathlib as pl
 from abc import ABC, abstractmethod
 from typing import Sequence
-import pathlib as pl
 
 import attrs
-from scm.plams import KFFile
 import numpy as np
-from orb_analysis.analyzer.calc_info import CalcInfo
-from orb_analysis.custom_types import SpinTypes
+from scm.plams import KFFile
 
-from orb_analysis.fragment.fragment import Fragment, RestrictedFragment, UnrestrictedFragment, create_restricted_fragment, create_unrestricted_fragment
+from orb_analysis.analyzer.calc_info import CalcInfo
 from orb_analysis.complex.complex import Complex, create_complex
-from orb_analysis.orbital_manager.orb_manager import MOManager, SFOManager
+from orb_analysis.custom_types import SpinTypes
+from orb_analysis.fragment.fragment import Fragment, RestrictedFragment, UnrestrictedFragment, create_restricted_fragment, create_unrestricted_fragment
 from orb_analysis.log_messages import calc_analyzer_call_message
 from orb_analysis.orbital.orbital import SFO
+from orb_analysis.orbital_manager.orb_manager import MOManager, SFOManager
 
 # --------------------Interface Method(s)-------------------- #
 
@@ -126,7 +126,7 @@ class RestrictedCalcAnalyser(CalcAnalyzer):
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)
-        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep if self.calc_info.symmetry else "A", index=sfo.index)
+        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep, index=sfo.index)
 
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)
@@ -180,7 +180,7 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)
-        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep if self.calc_info.symmetry else "A", index=sfo.index, spin=sfo.spin)
+        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
 
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)

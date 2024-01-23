@@ -1,6 +1,7 @@
 ﻿""" Scripts that deletes sections in the RKF files that are not needed for the tests in order to reduce the file size. """
 import pathlib as pl
 from typing import Sequence
+
 from scm.plams import KFFile
 
 REMOVE_SECTIONS = [
