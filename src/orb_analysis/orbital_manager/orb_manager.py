@@ -56,7 +56,7 @@ def calculate_matrix_element(sfo1: SFO, sfo2: SFO, overlap: float) -> float:
         return overlap**2 * 100
 
     # HOMO-LUMO / LUMO-HOMO: favorable orbital interactions (SCF process)
-    energy_gap: float = sfo1.energy - sfo1.energy
+    energy_gap: float = abs(sfo1.energy - sfo2.energy)
     if np.isclose(energy_gap, 0):
         return -overlap * 100
     else:
