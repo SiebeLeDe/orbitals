@@ -5,10 +5,11 @@ from typing import Any
 import attrs
 import numpy as np
 import pandas as pd
+from tabulate import tabulate
+
 from orb_analysis.custom_types import Array2D, SFOInteractionTypes
 from orb_analysis.log_messages import OVERLAP_MATRIX_NOTE, SFO_ORDER_NOTE, format_message, interaction_matrix_message
 from orb_analysis.orbital.orbital import MO, SFO
-from tabulate import tabulate
 
 # Used for formatting the tables in the __str__ methods using the tabulate package
 TABLE_FORMAT_OPTIONS: dict[str, Any] = {
@@ -56,7 +57,8 @@ def calculate_matrix_element(sfo1: SFO, sfo2: SFO, overlap: float) -> float:
         return overlap**2 * 100
 
     # HOMO-LUMO / LUMO-HOMO: favorable orbital interactions (SCF process)
-    energy_gap: float = abs(sfo1.energy - sfo2.energy)
+    energy_gap: float = abs(sfo1.energy - sfo2.energy) if sfo1.energy > sfo2.energy else abs(sfo2.energy - sfo1.energy)
+    # print(f"{sfo1.energy :.2f} {sfo2.energy :.2f} {energy_gap:.2f} {energy_gap2:.2f}")
     if np.isclose(energy_gap, 0):
         return -overlap * 100
     else:
@@ -84,7 +86,7 @@ class MOManager(OrbitalManager):
         """
         mos_info = [[orb.amsview_label, orb.homo_lumo_label, orb.energy] for orb in self.complex_mos]
 
-        table_headers = ["Molecular Orbitals", "", "Energy (Ha)"]
+        table_headers = ["Molecular Orbitals", "", "Energy (eV)"]
         table = tabulate(tabular_data=mos_info, headers=table_headers, **TABLE_FORMAT_OPTIONS)
 
         return "\n\n".join(["Molecular Orbitals", table])

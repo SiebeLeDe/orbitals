@@ -6,12 +6,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 import attrs
-from scm.plams import KFFile
+from scm.plams import KFFile, Units
+
 from orb_analysis.complex.complex_data import ComplexData, RestrictedComplexData, UnrestrictedComplexData, create_complex_data
 from orb_analysis.custom_types import SpinTypes
 from orb_analysis.orb_functions.orb_functions import filter_orbitals
 from orb_analysis.orbital.orbital import MO
-
 
 # --------------------Interface Function(s)-------------------- #
 
@@ -69,6 +69,7 @@ class Complex(ABC):
         # Then, flatten the data to a list of mos
         for irrep in self.complex_data.irreps:
             for index, energy, occ in zip(range(1, len(orb_energies[irrep]) + 1), orb_energies[irrep], occupations[irrep]):
+                energy: float = Units.convert(energy, "hartree", "eV")  # type: ignore
                 mos.append(MO(index=index, irrep=irrep, spin=spin, energy=energy, occupation=occ))
 
         return filter_orbitals(mos, max_occupied_orbitals, max_unoccupied_orbitals, irreps)
