@@ -6,7 +6,7 @@ from functools import lru_cache
 
 import attrs
 import numpy as np
-from scm.plams import KFFile
+from scm.plams import KFFile, Units
 
 from orb_analysis.analyzer.calc_info import CalcInfo
 from orb_analysis.custom_types import RestrictedProperty, SpinTypes
@@ -160,6 +160,7 @@ class Fragment(ABC):
         # Then, flatten the data to a list of SFOs
         for irrep in self.fragment_data.frag_irreps:
             for index, energy, occ in zip(range(1, len(orb_energies[irrep]) + 1), orb_energies[irrep], occupations[irrep]):
+                energy: float = Units.convert(self.get_orbital_energy(irrep, index, spin), "hartree", "eV")  # type: ignore
                 pop = self.get_gross_population(irrep if self.calc_info.symmetry else "A", index, spin)
                 sfos.append(SFO(index=index, irrep=irrep, spin=spin, energy=energy, gross_pop=pop, occupation=occ))
 

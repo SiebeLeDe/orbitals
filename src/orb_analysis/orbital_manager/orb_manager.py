@@ -1,14 +1,16 @@
 ﻿from abc import ABC
+from itertools import zip_longest
 from typing import Any
+
 import attrs
-from tabulate import tabulate
-from orb_analysis.custom_types import Array2D, SFOInteractionTypes
 import numpy as np
+import pandas as pd
+from tabulate import tabulate
+
+from orb_analysis.custom_types import Array2D, SFOInteractionTypes
 from orb_analysis.log_messages import OVERLAP_MATRIX_NOTE, SFO_ORDER_NOTE, format_message, interaction_matrix_message
 from orb_analysis.orbital.orbital import MO, SFO
-import pandas as pd
-from itertools import zip_longest
-from scm.plams import Units
+from orb_analysis.orbital.orbital_pair import OrbitalPair
 
 # Used for formatting the tables in the __str__ methods using the tabulate package
 TABLE_FORMAT_OPTIONS: dict[str, Any] = {
@@ -56,7 +58,8 @@ def calculate_matrix_element(sfo1: SFO, sfo2: SFO, overlap: float) -> float:
         return overlap**2 * 100
 
     # HOMO-LUMO / LUMO-HOMO: favorable orbital interactions (SCF process)
-    energy_gap: float = Units.convert(abs(sfo1.energy - sfo1.energy), "ha", "eV")  # type: ignore
+    energy_gap: float = abs(sfo1.energy - sfo2.energy) if sfo1.energy > sfo2.energy else abs(sfo2.energy - sfo1.energy)
+    # print(f"{sfo1.energy :.2f} {sfo2.energy :.2f} {energy_gap:.2f} {energy_gap2:.2f}")
     if np.isclose(energy_gap, 0):
         return -overlap * 100
     else:
@@ -84,7 +87,7 @@ class MOManager(OrbitalManager):
         """
         mos_info = [[orb.amsview_label, orb.homo_lumo_label, orb.energy] for orb in self.complex_mos]
 
-        table_headers = ["Molecular Orbitals", "", "Energy (Ha)"]
+        table_headers = ["Molecular Orbitals", "", "Energy (eV)"]
         table = tabulate(tabular_data=mos_info, headers=table_headers, **TABLE_FORMAT_OPTIONS)
 
         return "\n\n".join(["Molecular Orbitals", table])
@@ -122,7 +125,7 @@ class SFOManager(OrbitalManager):
 
         combined_info = [frag1 + frag2 for frag1, frag2 in zip_longest(frag1_orb_info, frag2_orb_info, fillvalue=["", "", "", ""])]
 
-        headers = ["Fragment 1", "", "E (Ha)", "Gross population"] + ["Fragment 2", "", "E (Ha)", "Gross population"]
+        headers = ["Fragment 1", "", "E (eV)", "Gross population"] + ["Fragment 2", "", "E (eV)", "Gross population"]
         table = tabulate(tabular_data=combined_info, headers=headers, **TABLE_FORMAT_OPTIONS)
         return table
 
@@ -158,3 +161,18 @@ class SFOManager(OrbitalManager):
         df = pd.DataFrame(stabilization_matrix, index=row_labels, columns=column_labels)
         table = tabulate(df, headers="keys", **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
         return table
+
+    def get_most_destabilizing_pauli_pairs(n_pairs: int) -> list[OrbitalPair]:
+        """
+        Determines which SFO pairs have the strongest repulsion.
+        Returns a list with the user-defined number of pairs with its first entry the pair that has the most destabilizing effect, and so on.
+        """
+        raise NotImplementedError()
+
+    def get_most_stabilizing_oi_pairs() -> list[OrbitalPair]:
+        """
+        Determines which SFO pairs have the most favorable orbital interactions.
+        Returns a list with the user-defined number of pairs with its first entry the pair that has the most stabilizing effect, and so on.
+        """
+
+        raise NotImplementedError()

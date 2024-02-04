@@ -22,7 +22,7 @@ from orb_analysis.orbital_manager.orb_manager import MOManager, SFOManager
 # --------------------Interface Method(s)-------------------- #
 
 
-def create_calc_analyser(path_to_rkf_file: str | pl.Path, n_fragments: int = 2) -> CalcAnalyzer:
+def create_calc_analyser(path_to_rkf_file: str | pl.Path, n_fragments: int = 2, name: str | None = None) -> CalcAnalyzer:
     """
     Main Method that the user should use to create a :FACalcAnalyser: object. The Method will automatically detect whether the calculation is restricted or unrestricted.
 
@@ -43,7 +43,7 @@ def create_calc_analyser(path_to_rkf_file: str | pl.Path, n_fragments: int = 2) 
     # - :CalcInfo: An instance that contains general information about the calculation such as restricted or unrestricted, relativistic or non-relativistic, etc.
     # - :Complex: An instance that contains information about the complex calculation (Molecular Orbitals)
     # - A list of :Fragment: objects that contain information about the fragment calculation and the fragments respectively (Symmetrized Fragment Orbitals).
-    name = path_to_rkf_file.parent.name + "/" + path_to_rkf_file.stem
+    name = path_to_rkf_file.parent.name + "/" + path_to_rkf_file.stem if name is None else name
     calc_info = CalcInfo(kf_file=kf_file)
     complex = create_complex(name=name, kf_file=kf_file, restricted_calc=calc_info.restricted)
 
