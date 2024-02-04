@@ -23,11 +23,11 @@ class AMSViewPlotSettings(PlotSettings):
     wireframe: bool = False
     transparent: bool = True
     viewplane: str = "0 0 1"
-    colorfield: str = "100 299 321"  # No idea what this value should be
-    printrange: bool = True
-    camera: int = -1.0  # Camera load-outs from AMS
-    val: float = 0.03  # isovalue
-    ciso: bool = False
+    # colorfield: str = "100 299 321"  # No idea what this value should be
+    # printrange: bool = False
+    # camera: int = -1.0  # Camera load-outs from AMS
+    # val: float = 0.03  # isovalue
+    # ciso: bool = False
 
 
 def plot_orbital_with_amsview(
@@ -58,7 +58,7 @@ def plot_orbital_with_amsview(
 
     Example command: amsview result.t41 -var SCF_A_8 -save "my_pic.png" -bgcolor "#FFFFFF" -transparent -antialias -scmgeometry "2160x1440" -wireframe
     """
-    command = ["amsview", input_file, "-var", orb_specifier]
+    command = ["amsview", str(input_file), "-var", orb_specifier]
 
     if save_file is not None:
         command.append("-save")
@@ -77,6 +77,7 @@ def plot_orbital_with_amsview(
         command.append(f"-{key}")
         command.append(str(value))
 
+    # print(" ".join(command))
     subprocess.run(command)
 
 
