@@ -10,6 +10,7 @@ from tabulate import tabulate
 from orb_analysis.custom_types import Array2D, SFOInteractionTypes
 from orb_analysis.log_messages import OVERLAP_MATRIX_NOTE, SFO_ORDER_NOTE, format_message, interaction_matrix_message
 from orb_analysis.orbital.orbital import MO, SFO
+from orb_analysis.orbital.orbital_pair import OrbitalPair
 
 # Used for formatting the tables in the __str__ methods using the tabulate package
 TABLE_FORMAT_OPTIONS: dict[str, Any] = {
@@ -160,3 +161,18 @@ class SFOManager(OrbitalManager):
         df = pd.DataFrame(stabilization_matrix, index=row_labels, columns=column_labels)
         table = tabulate(df, headers="keys", **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
         return table
+
+    def get_most_destabilizing_pauli_pairs(n_pairs: int) -> list[OrbitalPair]:
+        """
+        Determines which SFO pairs have the strongest repulsion.
+        Returns a list with the user-defined number of pairs with its first entry the pair that has the most destabilizing effect, and so on.
+        """
+        raise NotImplementedError()
+
+    def get_most_stabilizing_oi_pairs() -> list[OrbitalPair]:
+        """
+        Determines which SFO pairs have the most favorable orbital interactions.
+        Returns a list with the user-defined number of pairs with its first entry the pair that has the most stabilizing effect, and so on.
+        """
+
+        raise NotImplementedError()
