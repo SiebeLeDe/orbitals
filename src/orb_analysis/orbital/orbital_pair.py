@@ -19,4 +19,6 @@ class OrbitalPair:
 
     @property
     def stabilization(self) -> float:
+        if self.orb1.is_occupied and self.orb2.is_occupied:
+            return -1.0
         return calculate_matrix_element(self.orb1, self.orb2, self.overlap)
