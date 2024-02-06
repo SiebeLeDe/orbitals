@@ -14,7 +14,7 @@ class OrbitalPair:
         if self.is_pauli_pair:
             return f"frag1 SFO: {self.orb1.homo_lumo_label:15s} frag2 SFO: {self.orb2.homo_lumo_label:15s} Overlap: {self.overlap:.3f}"
 
-        return f"frag1 SFO: {self.orb1.homo_lumo_label:15s} frag2 SFO: {self.orb2.homo_lumo_label:15s} Overlap: {self.overlap:.3f} Stabilization: {self.stabilization}"
+        return f"frag1 SFO: {self.orb1.homo_lumo_label:15s} frag2 SFO: {self.orb2.homo_lumo_label:15s} Overlap: {self.overlap:.3f} Stabilization: {self.stabilization:.3f}"
 
     @property
     def is_pauli_pair(self) -> bool:
