@@ -11,7 +11,14 @@ class OrbitalPair:
     overlap: float
 
     def __str__(self):
-        return f"frag1 SFO: {self.orb1.homo_lumo_label:15s} frag2 SFO: {self.orb2.homo_lumo_label:15s} Overlap: {self.overlap:.3f}"
+        if self.is_pauli_pair:
+            return f"frag1 SFO: {self.orb1.homo_lumo_label:15s} frag2 SFO: {self.orb2.homo_lumo_label:15s} Overlap: {self.overlap:.3f}"
+
+        return f"frag1 SFO: {self.orb1.homo_lumo_label:15s} frag2 SFO: {self.orb2.homo_lumo_label:15s} Overlap: {self.overlap:.3f} Stabilization: {self.stabilization}"
+
+    @property
+    def is_pauli_pair(self) -> bool:
+        return self.orb1.is_occupied and self.orb2.is_occupied
 
     @property
     def energy_gap(self) -> float:
@@ -19,6 +26,6 @@ class OrbitalPair:
 
     @property
     def stabilization(self) -> float:
-        if self.orb1.is_occupied and self.orb2.is_occupied:
+        if self.is_pauli_pair:
             return -1.0
         return calculate_matrix_element(self.orb1, self.orb2, self.overlap)
