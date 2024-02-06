@@ -5,12 +5,12 @@ from typing import Any
 import attrs
 import numpy as np
 import pandas as pd
-from tabulate import tabulate
-
 from orb_analysis.custom_types import Array2D, SFOInteractionTypes
 from orb_analysis.log_messages import OVERLAP_MATRIX_NOTE, SFO_ORDER_NOTE, format_message, interaction_matrix_message
 from orb_analysis.orbital.orbital import MO, SFO
 from orb_analysis.orbital.orbital_pair import OrbitalPair
+from orb_analysis.orbital_manager.shared_functions import calculate_matrix_element, filter_sfos_by_interaction_type
+from tabulate import tabulate
 
 # Used for formatting the tables in the __str__ methods using the tabulate package
 TABLE_FORMAT_OPTIONS: dict[str, Any] = {
@@ -19,51 +19,6 @@ TABLE_FORMAT_OPTIONS: dict[str, Any] = {
     "floatfmt": "+.3f",
     "tablefmt": "simple_outline",
 }
-
-# ------------------------------------------------------------ #
-# --------------------- Helper Functions --------------------- #
-# ------------------------------------------------------------ #
-
-
-def filter_sfos_by_interaction_type(frag1_sfos: list[SFO], frag2_sfos: list[SFO], interaction_type: SFOInteractionTypes) -> tuple[list[int], list[int]]:
-    """Returns the indices of relevant frag1 and frag 2 SFOs depending on the interaction type"""
-
-    if interaction_type == SFOInteractionTypes.HOMO_HOMO:
-        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_occupied]
-        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_occupied]
-
-    elif interaction_type == SFOInteractionTypes.HOMO_LUMO:
-        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_occupied]
-        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if not sfo.is_occupied]
-
-    elif interaction_type == SFOInteractionTypes.LUMO_HOMO:
-        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if not sfo.is_occupied]
-        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_occupied]
-
-    else:
-        frag1_filtered_indices = [index for index in range(len(frag1_sfos))]
-        frag2_filtered_indices = [index for index in range(len(frag2_sfos))]
-
-    return frag1_filtered_indices, frag2_filtered_indices
-
-
-def calculate_matrix_element(sfo1: SFO, sfo2: SFO, overlap: float) -> float:
-    """Checks if the interaction is HOMO-HOMO / HOMO-LUMO / LUMO-LUMO and returns the correct value (see parent function docstring"""
-    # LUMO-LUMO: non-physical
-    if not sfo1.is_occupied and not sfo2.is_occupied:
-        return 0.0
-
-    # HOMO-HOMO: Pauli repulsion
-    if sfo1.is_occupied and sfo2.is_occupied:
-        return overlap**2 * 100
-
-    # HOMO-LUMO / LUMO-HOMO: favorable orbital interactions (SCF process)
-    energy_gap: float = abs(sfo1.energy - sfo2.energy) if sfo1.energy > sfo2.energy else abs(sfo2.energy - sfo1.energy)
-    # print(f"{sfo1.energy :.2f} {sfo2.energy :.2f} {energy_gap:.2f} {energy_gap2:.2f}")
-    if np.isclose(energy_gap, 0):
-        return -overlap * 100
-    else:
-        return (overlap**2 / energy_gap) * 100
 
 
 # ------------------------------------------------------------ #
@@ -162,17 +117,26 @@ class SFOManager(OrbitalManager):
         table = tabulate(df, headers="keys", **TABLE_FORMAT_OPTIONS)  # type: ignore # df is accepted as argument
         return table
 
-    def get_most_destabilizing_pauli_pairs(n_pairs: int) -> list[OrbitalPair]:
+    def get_most_destabilizing_pauli_pairs(self, n_pairs: int, type: SFOInteractionTypes = SFOInteractionTypes.HOMO_HOMO) -> list[OrbitalPair]:
         """
-        Determines which SFO pairs have the strongest repulsion.
+        Determines which SFO pairs have the strongest repulsion by searching for the indices where the Pauli repulsion matrix is the largest.
         Returns a list with the user-defined number of pairs with its first entry the pair that has the most destabilizing effect, and so on.
         """
-        raise NotImplementedError()
+        indices = np.unravel_index(np.argsort(self.overlap_matrix, axis=None)[:n_pairs], self.overlap_matrix.shape)
+        pairs = [OrbitalPair(self.frag1_sfos[i], self.frag2_sfos[j], float(self.overlap_matrix[i, j])) for i, j in zip(*indices)]
 
-    def get_most_stabilizing_oi_pairs() -> list[OrbitalPair]:
+        # Go over pairs and remove LUMO-LUMO pairs
+        pairs = [pair for pair in pairs if pair.orb1.is_occupied or pair.orb2.is_occupied]
+
+        # Determine if occupied/occupued pairs should be returned
+        if type == SFOInteractionTypes.HOMO_HOMO:
+            return [pair for pair in pairs if pair.orb1.is_occupied and pair.orb2.is_occupied]
+
+        return pairs
+
+    def get_most_stabilizing_oi_pairs(self) -> list[OrbitalPair]:
         """
         Determines which SFO pairs have the most favorable orbital interactions.
         Returns a list with the user-defined number of pairs with its first entry the pair that has the most stabilizing effect, and so on.
         """
-
-        raise NotImplementedError()
+        raise NotImplementedError
