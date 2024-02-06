@@ -23,6 +23,6 @@ spin: str = SpinTypes.A  # "A" or "B" | does only matter for unrestricted calcul
 calc_analyzer = create_calc_analyser(rkf_file)  # This is the main object that will be used to analyze the calculation
 
 sfo_manager = calc_analyzer.get_sfo_orbitals(orb_range, orb_range)
-print(sfo_manager)
+# print(sfo_manager)
 orb_pairs = sfo_manager.get_most_destabilizing_pauli_pairs(9, "HOMO_LUMO")  # type: ignore
 [print(pair) for pair in orb_pairs]
