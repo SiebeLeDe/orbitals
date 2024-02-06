@@ -1,5 +1,6 @@
-from enum import Enum, StrEnum, auto
+from enum import StrEnum, auto
 from typing import Annotated, Literal, TypeVar
+
 import numpy as np
 import numpy.typing as npt
 
@@ -24,7 +25,7 @@ class SpinTypes(StrEnum):
     B = "B"
 
 
-class SFOInteractionTypes(Enum):
+class SFOInteractionTypes(StrEnum):
     """Enum class for the different types of SFO interactions"""
 
     HOMO_HOMO = auto()
