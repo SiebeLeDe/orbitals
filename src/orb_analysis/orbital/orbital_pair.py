@@ -1,5 +1,9 @@
-﻿import attrs
+﻿from __future__ import annotations
+
+import attrs
 import numpy as np
+import pandas as pd
+from tabulate import tabulate
 
 from orb_analysis.custom_types import Array1D
 from orb_analysis.orbital.orbital import SFO
@@ -32,15 +36,14 @@ class OrbitalPair:
             return -1.0
         return calculate_matrix_element(self.orb1, self.orb2, self.overlap)
 
+    @property
     def as_numpy_array(self) -> Array1D:
         array = np.array(
             [
-                self.orb1.amsview_label,
-                self.orb1.homo_lumo_label,
+                f"{self.orb1.amsview_label} {self.orb1.homo_lumo_label}",
                 self.orb1.energy,
                 self.orb1.gross_pop,
-                self.orb2.amsview_label,
-                self.orb2.homo_lumo_label,
+                f"{self.orb2.amsview_label} {self.orb2.homo_lumo_label}",
                 self.orb2.energy,
                 self.orb2.gross_pop,
                 self.overlap,
@@ -48,3 +51,20 @@ class OrbitalPair:
             ]
         )
         return array
+
+    @staticmethod
+    def format_orbital_pair_for_printing(orb_pairs: list[OrbitalPair], top_header: str = "SFO Interaction Pairs") -> str:
+        """
+        Returns a string representing each orbital pair in the list in a nicely formatted table
+        Example:
+            [orb1_label] [orb1_energy] [orb1_grosspop] [orb2_label] [orb2_energy] [orb2_grosspop] [overlap] [stabilization]
+        """
+        headers = ["SFO1", "energy (eV)", "gross pop (a.u.)", "SFO2", "energy (eV)", "gross pop (a.u.)", "Overlap", "S^2/epsilon * 100"]
+
+        # Create a DataFrame
+        df = pd.DataFrame([orb_pair.as_numpy_array for orb_pair in orb_pairs], columns=headers)
+
+        # Use tabulate to create a formatted string
+        result = tabulate(df, headers="keys", tablefmt="simple", showindex=False, floatfmt=".3f")  # type: ignore # df is accepted as argument
+
+        return f"\n{top_header}\n{result}"

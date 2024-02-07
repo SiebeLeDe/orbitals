@@ -1,11 +1,31 @@
 import pathlib as pl
 
 import numpy as np
+import pandas as pd
 from orb_analysis.analyzer.calc_analyzer import create_calc_analyser
 from orb_analysis.custom_types import SpinTypes
+from orb_analysis.orbital.orbital_pair import OrbitalPair
+from tabulate import tabulate
 
 np.set_printoptions(precision=5, suppress=True)
 # https://www.scm.com/doc/ADF/Appendices/TAPE21.html
+
+
+def format_orbital_pair_for_printing(orb_pairs: list[OrbitalPair], top_header: str = "SFO Interaction Pairs") -> str:
+    """
+    Returns a string representing each orbital pair in the list in a nicely formatted table
+    Example:
+        [orb1_label] [orb1_energy] [orb1_grosspop] [orb2_label] [orb2_energy] [orb2_grosspop] [overlap] [stabilization]
+    """
+    headers = ["SFO1", "energy (eV)", "gross pop (a.u.)", "SFO2", "energy (eV)", "gross pop (a.u.)", "Overlap", "S^2/epsilon * 100"]
+
+    # Create a DataFrame
+    df = pd.DataFrame([orb_pair.as_numpy_array for orb_pair in orb_pairs], columns=headers)
+
+    # Use tabulate to create a formatted string
+    result = tabulate(df, headers="keys", tablefmt="simple", showindex=False, floatfmt=".3f")  # type: ignore # df is accepted as argument
+
+    return f"\n{top_header}\n{result}"
 
 
 # --------------------Input Arguments-------------------- #
@@ -28,4 +48,7 @@ orb_pairs = sfo_manager.get_most_destabilizing_pauli_pairs(5)  # type: ignore
 # [print(pair) for pair in orb_pairs]
 oi_pairs = sfo_manager.get_most_stabilizing_oi_pairs(5)  # type: ignore
 # [print(pair.orb1, pair.orb2, pair.overlap) for pair in oi_pairs]
-[print(pair) for pair in oi_pairs]
+formatted_pairs = format_orbital_pair_for_printing(oi_pairs, "SFO OI Pairs")
+print(formatted_pairs)
+formatted_pairs = format_orbital_pair_for_printing(orb_pairs, "SFO Pauli Pairs")
+print(formatted_pairs)

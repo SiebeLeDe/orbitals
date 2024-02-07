@@ -2,6 +2,7 @@
 Module containing the :Orbital: class that acts as a basis for symmetrized fragment orbitals (SFOs) and molecular orbitals (MOs).
 """
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 
 import attrs
