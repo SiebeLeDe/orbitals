@@ -31,9 +31,9 @@ class OrbitalPair:
         return abs(self.orb1.energy - self.orb2.energy)
 
     @property
-    def stabilization(self) -> float:
+    def stabilization(self) -> float | str:
         if self.is_pauli_pair:
-            return -1.0
+            return "---"
         return calculate_matrix_element(self.orb1, self.orb2, self.overlap)
 
     @property
@@ -53,7 +53,7 @@ class OrbitalPair:
         return array
 
     @staticmethod
-    def format_orbital_pair_for_printing(orb_pairs: list[OrbitalPair], top_header: str = "SFO Interaction Pairs") -> str:
+    def format_orbital_pairs_for_printing(orb_pairs: list[OrbitalPair], top_header: str = "SFO Interaction Pairs") -> str:
         """
         Returns a string representing each orbital pair in the list in a nicely formatted table
         Example:
@@ -65,6 +65,6 @@ class OrbitalPair:
         df = pd.DataFrame([orb_pair.as_numpy_array for orb_pair in orb_pairs], columns=headers)
 
         # Use tabulate to create a formatted string
-        result = tabulate(df, headers="keys", tablefmt="simple", showindex=False, floatfmt=".3f")  # type: ignore # df is accepted as argument
+        result = tabulate(df, headers="keys", tablefmt="simple", showindex=False, floatfmt="+.3f")  # type: ignore # df is accepted as argument
 
         return f"\n{top_header}\n{result}"
