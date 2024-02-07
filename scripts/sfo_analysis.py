@@ -34,6 +34,7 @@ def make_interaction_table(type: str, system_names: list[str], interaction_list:
 
 
 base_dir = pl.Path(r"C:\Users\siebb\VU_PhD\PhD\Projects\Squaramides\calcs\dimer_with_urea").resolve()
+# base_dir = pl.Path("/Users/siebeld/Library/CloudStorage/OneDrive-VrijeUniversiteitAmsterdam/PhD/Projects/Squaramides/calcs/dimer_with_urea").resolve()
 calc_dir = base_dir / "fa_consistent"
 output_dir = base_dir / "fa_orb_results" / "consistent_geo_fa"
 orb_range: tuple[int, int] = (7, 5)  # The range of orbitals to be analyzed (HOMO-X, LUMO+X with X the specified range)
@@ -74,16 +75,18 @@ for system_name, sfo_manager in zip(systems, sfo_managers):
     output_file = output_dir / f"{system_name}.txt"
     output_file.write_text(f"{sfo_manager}")
 
-    print(f"Output file written to {output_file}")
+    print(f"Output file written to {output_file.parent}/{output_file.name}")
 
 
-important_pauli_interactions = [sfo_manager.get_most_destabilizing_pauli_pairs(3) for sfo_manager in sfo_managers]
-important_oi_orbital_pairs = [sfo_manager.get_most_stabilizing_oi_pairs(5) for sfo_manager in sfo_managers]
+important_pauli_interactions = [sfo_manager.get_most_destabilizing_pauli_pairs(4) for sfo_manager in sfo_managers]
+important_oi_orbital_pairs = [sfo_manager.get_most_stabilizing_oi_pairs(4) for sfo_manager in sfo_managers]
 
 pauli_outfile = output_dir / "Pauli.txt"
 oi_outfile = output_dir / "OI.txt"
 pauli_outfile.write_text(make_interaction_table("Pauli", systems, important_pauli_interactions))
-oi_outfile.write_text(make_interaction_table("OI", systems, important_oi_orbital_pairs))
+print(f"Pauli file written to {pauli_outfile.parent.name}")
+# oi_outfile.write_text(make_interaction_table("OI", systems, important_oi_orbital_pairs))
+# print(f"OI file written to {oi_outfile.parent.name}")
 
 # # Copy the rkf_file for transfering to local computer
 # copy_folder = output_dir / "rkf_files"
