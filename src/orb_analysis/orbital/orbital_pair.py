@@ -47,6 +47,7 @@ class OrbitalPair:
                 self.orb2.energy,
                 self.orb2.gross_pop,
                 self.overlap,
+                self.energy_gap,
                 self.stabilization,
             ]
         )
@@ -59,7 +60,7 @@ class OrbitalPair:
         Example:
             [orb1_label] [orb1_energy] [orb1_grosspop] [orb2_label] [orb2_energy] [orb2_grosspop] [overlap] [stabilization]
         """
-        headers = ["SFO1", "energy (eV)", "gross pop (a.u.)", "SFO2", "energy (eV)", "gross pop (a.u.)", "Overlap", "S^2/epsilon * 100"]
+        headers = ["SFO1", "energy (eV)", "gross pop (a.u.)", "SFO2", "energy (eV)", "gross pop (a.u.)", "Overlap S", "epsilon (eV)", "S^2/epsilon * 100"]
 
         # Create a DataFrame
         df = pd.DataFrame([orb_pair.as_numpy_array for orb_pair in orb_pairs], columns=headers)

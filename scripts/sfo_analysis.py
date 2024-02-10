@@ -82,9 +82,9 @@ important_pauli_interactions = [sfo_manager.get_most_destabilizing_pauli_pairs(4
 important_oi_orbital_pairs = [sfo_manager.get_most_stabilizing_oi_pairs(4) for sfo_manager in sfo_managers]
 
 pauli_outfile = output_dir / "Pauli.txt"
-oi_outfile = output_dir / "OI.txt"
 pauli_outfile.write_text(make_interaction_table("Pauli", systems, important_pauli_interactions))
 print(f"Pauli file written to {pauli_outfile.parent.name}")
+# oi_outfile = output_dir / "OI.txt"
 # oi_outfile.write_text(make_interaction_table("OI", systems, important_oi_orbital_pairs))
 # print(f"OI file written to {oi_outfile.parent.name}")
 
