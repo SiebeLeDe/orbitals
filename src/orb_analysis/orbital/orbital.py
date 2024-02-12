@@ -80,7 +80,9 @@ class SFO(Orbital):
     the index, irrep and spin of the SFO. The index is the order in which the SFOs are stored in the rkf file.
 
     Also possible is to initialize the class with a label. The correct format of the label is:
-    <index>_<irrep or <index>_<irrep>_<spin> if the SFO is from an unrestricted calculation.
+    <index>_<irrep> or <index>_<irrep>_<spin> if the SFO is from an unrestricted calculation.
+
+    e.g. "14_AA_A"
     """
 
     gross_pop: float = 1000.0

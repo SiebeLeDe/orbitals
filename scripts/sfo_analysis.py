@@ -1,8 +1,11 @@
 ﻿import pathlib as pl
+from typing import Sequence
 
 import numpy as np
 from orb_analysis.analyzer.calc_analyzer import create_calc_analyser
 from orb_analysis.orbital.orbital_pair import OrbitalPair
+from orb_analysis.orbital_manager.orb_manager import OrbitalManager
+from scm.plams import Units
 
 np.set_printoptions(precision=5, suppress=True)
 
@@ -33,6 +36,14 @@ def make_interaction_table(type: str, system_names: list[str], interaction_list:
     return ret_str
 
 
+def write_orbital_data_to_file(type: str, orbital_managers: Sequence[OrbitalManager], output_dir: pl.Path) -> None:
+    """Writes the orbital data to a file"""
+    for system_name, sfo_manager in zip(systems, orbital_managers):
+        output_file = output_dir / f"{type}_{system_name}.txt"
+        output_file.write_text(f"{sfo_manager}")
+        print(f"{type} output file written to {output_file.parent}/{output_file.name}")
+
+
 base_dir = pl.Path(r"C:\Users\siebb\VU_PhD\PhD\Projects\Squaramides\calcs\dimer_with_urea").resolve()
 # base_dir = pl.Path("/Users/siebeld/Library/CloudStorage/OneDrive-VrijeUniversiteitAmsterdam/PhD/Projects/Squaramides/calcs/dimer_with_urea").resolve()
 calc_dir = base_dir / "fa_consistent"
@@ -44,15 +55,15 @@ interpol_point: float = 2.8
 
 
 systems = [
-    "urea_di_o_cs_X",
-    "urea_di_s_cs_X",
-    "urea_di_se_cs_X",
-    "deltamide_di_o_cs_X",
-    "deltamide_di_s_cs_X",
-    "deltamide_di_se_cs_X",
+    # "urea_di_o_cs_X",
+    # "urea_di_s_cs_X",
+    # "urea_di_se_cs_X",
+    # "deltamide_di_o_cs_X",
+    # "deltamide_di_s_cs_X",
+    # "deltamide_di_se_cs_X",
     "squaramide_di_o_cs_X",
-    "squaramide_di_s_cs_X",
-    "squaramide_di_se_cs_X",
+    # "squaramide_di_s_cs_X",
+    # "squaramide_di_se_cs_X",
 ]
 
 # replace "X" by the type_calc
@@ -68,22 +79,40 @@ systems = [calc.replace("X", str(type_calc)) for calc in systems]
 # 2. Load the specific pyfrag calculation that is the closest to the specified point.
 rkf_files = [calc_dir / f"{system}.adf.rkf" for system in systems]
 calc_analyzers = [create_calc_analyser(rkf_file, name=calc) for calc, rkf_file in zip(systems, rkf_files)]
-sfo_managers = [calc_analyzer.get_sfo_orbitals(orb_range, orb_range, irrep) for calc_analyzer in calc_analyzers]
+# sfo_managers = [calc_analyzer.get_sfo_orbitals(orb_range, orb_range, irrep) for calc_analyzer in calc_analyzers]
+# mo_managers = [calc_analyzer.get_mo_orbitals((11, 11), irrep) for calc_analyzer in calc_analyzers]
 
-output_dir.mkdir(exist_ok=True)
-for system_name, sfo_manager in zip(systems, sfo_managers):
-    output_file = output_dir / f"{system_name}.txt"
-    output_file.write_text(f"{sfo_manager}")
+grosspop1 = calc_analyzers[0].get_sfo_gross_population(1, "23_AA_A")
+grosspop2 = calc_analyzers[0].get_sfo_gross_population(2, "15_AA_A")
+e1 = calc_analyzers[0].get_sfo_orbital_energy(1, "23_AA_A")
+e2 = calc_analyzers[0].get_sfo_orbital_energy(2, "15_AA_A")
+e1, e2 = Units.convert(e1, "hartree", "eV"), Units.convert(e2, "hartree", "eV")
+overlap = calc_analyzers[0].get_sfo_overlap("23_AA_A", "15_AA_A")
 
-    print(f"Output file written to {output_file.parent}/{output_file.name}")
+print(
+    f"""
+      Grosspop 1: {grosspop1:.3f}
+      Grosspop 2: {grosspop2:.3f}
+      Energy 1: {e1:.3f}
+      Energy 2: {e2:.3f}
+      Energygap 1-2: {abs(e1 - e2):.3f}
+      Overlap: {overlap:.3f}
+      Stabilization energy: {overlap**2 / abs(e1 - e2) * 100:.3f}
+      """
+)
+# output_dir.mkdir(exist_ok=True)
+# write_orbital_data_to_file("SFO", sfo_managers, output_dir)
+# write_orbital_data_to_file("MO", mo_managers, output_dir)
 
 
-important_pauli_interactions = [sfo_manager.get_most_destabilizing_pauli_pairs(4) for sfo_manager in sfo_managers]
-important_oi_orbital_pairs = [sfo_manager.get_most_stabilizing_oi_pairs(4) for sfo_manager in sfo_managers]
+# important_pauli_interactions = [sfo_manager.get_most_destabilizing_pauli_pairs(4) for sfo_manager in sfo_managers]
+# important_oi_orbital_pairs = [sfo_manager.get_most_stabilizing_oi_pairs(4) for sfo_manager in sfo_managers]
 
-pauli_outfile = output_dir / "Pauli.txt"
-pauli_outfile.write_text(make_interaction_table("Pauli", systems, important_pauli_interactions))
-print(f"Pauli file written to {pauli_outfile.parent.name}")
+# pauli_outfile = output_dir / "Pauli.txt"
+# pauli_outfile.write_text(make_interaction_table("Pauli", systems, important_pauli_interactions))
+# print(f"Pauli file written to {pauli_outfile.parent.name}")
+
+
 # oi_outfile = output_dir / "OI.txt"
 # oi_outfile.write_text(make_interaction_table("OI", systems, important_oi_orbital_pairs))
 # print(f"OI file written to {oi_outfile.parent.name}")
