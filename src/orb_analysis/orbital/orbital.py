@@ -20,7 +20,7 @@ class Orbital(ABC):
 
     index: int
     irrep: str
-    spin: str
+    spin: str | None = None
     energy: float = 1000.0
     occupation: float = -1.0
     homo_lumo_index: int = 1000  # Displays either HOMO-[x] or LUMO+[x]
@@ -96,7 +96,9 @@ class SFO(Orbital):
     @property
     def amsview_label(self) -> str:
         """Returns the orbital label that can be used for AMSView plotting"""
-        return f"SFO_{self.irrep}_{self.index}_{self.spin}"
+        if self.spin is not None:
+            return f"SFO_{self.irrep}_{self.index}_{self.spin}"
+        return f"SFO_{self.irrep}_{self.index}"
 
 
 class MO(Orbital):
@@ -117,7 +119,9 @@ class MO(Orbital):
     @property
     def amsview_label(self) -> str:
         """Returns the orbital label that can be used for AMSView plotting"""
-        return f"SCF_{self.irrep}_{self.index}_{self.spin}"
+        if self.spin is not None:
+            return f"SCF_{self.irrep}_{self.index}_{self.spin}"
+        return f"SCF_{self.irrep}_{self.index}"
 
 
 def main():

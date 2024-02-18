@@ -23,11 +23,11 @@ class AMSViewPlotSettings(PlotSettings):
     wireframe: bool = False
     transparent: bool = True
     viewplane: str = "0 0 1"
-    colorfield: str = "100 299 321"  # No idea what this value should be
-    printrange: bool = True
-    camera: int = -1  # Camera load-outs from AMS
-    val: float = 0.03  # isovalue
-    ciso: bool = False
+    # colorfield: str = "100 299 321"  # No idea what this value should be
+    # printrange: bool = True
+    # camera: int = -1  # Camera load-outs from AMS
+    # val: float = 0.03  # isovalue
+    # ciso: bool = False
 
 
 def plot_orbital_with_amsview(

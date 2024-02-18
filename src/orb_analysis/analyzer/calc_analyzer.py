@@ -190,11 +190,11 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
         sfo = self._get_sfo(sfo)
         return self._get_fragment(fragment).get_occupation(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
 
-    def get_mo_orbitals(self, orb_range: tuple[int, int] = (-10, 10), irrep: str | None = None, spin: str = SpinTypes.A) -> MOManager:
+    def get_mo_orbitals(self, orb_range: tuple[int, int] = (-10, 10), irrep: str | None = None, spin: str | None = None) -> MOManager:
         mos = self.complex.get_mos(orb_range=orb_range, orb_irrep=irrep, spin=spin)
         return MOManager(complex_mos=mos)
 
-    def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None, spin: str = SpinTypes.A) -> SFOManager:
+    def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None, spin: str | None = None) -> SFOManager:
         frag_sfos = [frag.get_sfos(homo_lumo_range, irrep, spin) for homo_lumo_range, frag in zip([frag1_orb_range, frag2_orb_range], self.fragments)]
         frag_sfos[1] = frag_sfos[1][::-1]  # reverse the orbitals to go from LUMO+x -> HOMO-x to HOMO-x -> LUMO+x
 
