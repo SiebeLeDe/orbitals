@@ -45,7 +45,7 @@ class MOManager(OrbitalManager):
         table_headers = ["Molecular Orbitals", "", "Energy (eV)"]
         table = tabulate(tabular_data=mos_info, headers=table_headers, **TABLE_FORMAT_OPTIONS)
 
-        return "\n\n".join(["Molecular Orbitals", table])
+        return table
 
 
 @attrs.define
