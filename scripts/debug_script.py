@@ -28,12 +28,15 @@ def format_orbital_pair_for_printing(orb_pairs: list[OrbitalPair], top_header: s
     return f"\n{top_header}\n{result}"
 
 
+systems: list[str] = [f"{species}_di_{chalc}_cs_7.adf.rkf" for species in ["urea", "deltamide", "squaramide"] for chalc in ["o", "s", "se"]]
+
 # --------------------Input Arguments-------------------- #
-rkf_folder = pl.Path(__file__).parent.parent / "test" / "fixtures" / "rkfs"
-rkf_file = rkf_folder / "restricted_largecore_fragsym_c3v_full.adf.rkf"
+# rkf_folder = pl.Path(__file__).parent.parent / "test" / "fixtures" / "rkfs"
+rkf_folder = pl.Path(r"C:\Users\siebb\VU_PhD\PhD\Projects\Squaramides\calcs\dimer_with_urea\fa_orb_results\consistent_geo_fa\rkf_files").resolve()
+rkf_file = rkf_folder / systems[0]
 # rkf_file = rkf_folder / "unrestricted_largecore_fragsym_c3v_full.adf.rkf"
 
-orb_range: tuple[int, int] = (3, 3)  # The range of orbitals to be analyzed (HOMO-X, LUMO+X with X the specified range)
+orb_range: tuple[int, int] = (5, 5)  # The range of orbitals to be analyzed (HOMO-X, LUMO+X with X the specified range)
 irrep: str | None = None  # irrep such as "A1" (C3v) or "AA" (in Cs)
 spin: str = SpinTypes.A  # "A" or "B" | does only matter for unrestricted calculations
 
@@ -44,9 +47,9 @@ calc_analyzer = create_calc_analyser(rkf_file)  # This is the main object that w
 
 sfo_manager = calc_analyzer.get_sfo_orbitals(orb_range, orb_range)
 # print(sfo_manager)
-orb_pairs = sfo_manager.get_most_destabilizing_pauli_pairs(5)  # type: ignore
+orb_pairs = sfo_manager.get_most_destabilizing_pauli_pairs(5)
 # [print(pair) for pair in orb_pairs]
-oi_pairs = sfo_manager.get_most_stabilizing_oi_pairs(5)  # type: ignore
+oi_pairs = sfo_manager.get_most_stabilizing_oi_pairs(5)
 # [print(pair.orb1, pair.orb2, pair.overlap) for pair in oi_pairs]
 formatted_pairs = format_orbital_pair_for_printing(oi_pairs, "SFO OI Pairs")
 print(formatted_pairs)

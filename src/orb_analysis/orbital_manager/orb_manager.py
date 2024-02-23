@@ -17,7 +17,7 @@ TABLE_FORMAT_OPTIONS: dict[str, Any] = {
     "numalign": "left",
     "stralign": "left",
     "floatfmt": "+.3f",
-    "tablefmt": "simple_outline",
+    "tablefmt": "simple",
 }
 
 
@@ -45,7 +45,7 @@ class MOManager(OrbitalManager):
         table_headers = ["Molecular Orbitals", "", "Energy (eV)"]
         table = tabulate(tabular_data=mos_info, headers=table_headers, **TABLE_FORMAT_OPTIONS)
 
-        return "\n\n".join(["Molecular Orbitals", table])
+        return table
 
 
 @attrs.define
@@ -135,7 +135,19 @@ class SFOManager(OrbitalManager):
         Determines which SFO pairs have the strongest repulsion by searching for the indices where the Pauli repulsion matrix is the largest.
         Returns a list with the user-defined number of pairs with its first entry the pair that has the most destabilizing effect, and so on.
         """
-        indices = np.unravel_index(np.argsort(self.overlap_matrix, axis=None)[:n_pairs], self.overlap_matrix.shape)
+
+        # First, get the overlap matrix of only the HOMO-HOMO pairs by checking if the both SFOs are occupied. If not, make the overlap 0
+        pauli_overlap_matrix = self.overlap_matrix.copy()
+        for i, orb1 in enumerate(self.frag1_sfos):
+            for j, orb2 in enumerate(self.frag2_sfos):
+                if not (orb1.is_occupied and orb2.is_occupied):
+                    pauli_overlap_matrix[i, j] = 0
+                # magnitude of the overlap is most important; so make every value positive.
+                else:
+                    pauli_overlap_matrix[i, j] = abs(pauli_overlap_matrix[i, j])
+
+        # Determine indices in the matrix (corresponding to SFO1-SFO2 pairs) sorted by the largest overlap
+        indices = np.unravel_index(np.argsort(-pauli_overlap_matrix, axis=None)[:n_pairs], pauli_overlap_matrix.shape)
         pairs = [OrbitalPair(self.frag1_sfos[i], self.frag2_sfos[j], float(self.overlap_matrix[i, j])) for i, j in zip(*indices)]
 
         # select the n_pairs most destabilizing pairs
@@ -147,6 +159,8 @@ class SFOManager(OrbitalManager):
         Returns a list with the user-defined number of pairs with its first entry the pair that has the most stabilizing effect, and so on.
         """
         stabilization_matrix = self.stabilization_matrix
+
+        # Determine indices in the matrix (corresponding to SFO1-SFO2 pairs) sorted by the largest stabilization
         indices = np.unravel_index(np.argsort(-stabilization_matrix, axis=None)[:n_pairs], stabilization_matrix.shape)
         pairs = [OrbitalPair(self.frag1_sfos[i], self.frag2_sfos[j], float(self.overlap_matrix[i, j])) for i, j in zip(*indices)]
 

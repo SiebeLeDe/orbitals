@@ -9,7 +9,6 @@ import attrs
 from scm.plams import KFFile, Units
 
 from orb_analysis.complex.complex_data import ComplexData, RestrictedComplexData, UnrestrictedComplexData, create_complex_data
-from orb_analysis.custom_types import SpinTypes
 from orb_analysis.orb_functions.orb_functions import filter_orbitals
 from orb_analysis.orbital.orbital import MO
 
@@ -90,12 +89,12 @@ class RestrictedComplex(Complex):
     def get_occupation(self, irrep: str, index: int, spin: str):
         return self.complex_data.occupations[irrep][index - 1]
 
-    def get_mos(self, orb_range: tuple[int, int], orb_irrep: str | None = None, spin: str | None = SpinTypes.A) -> list[MO]:
+    def get_mos(self, orb_range: tuple[int, int], orb_irrep: str | None = None, spin: str | None = None) -> list[MO]:
         # First get the data
         orb_energies = self.complex_data.orb_energies
         occupations = self.complex_data.occupations
 
-        return self._get_mos(orb_range, orb_irrep, SpinTypes.A, orb_energies, occupations)
+        return self._get_mos(orb_range, orb_irrep, spin, orb_energies, occupations)
 
 
 class UnrestrictedComplex(Complex):

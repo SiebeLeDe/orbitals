@@ -20,7 +20,7 @@ class Orbital(ABC):
 
     index: int
     irrep: str
-    spin: str
+    spin: str | None = None
     energy: float = 1000.0
     occupation: float = -1.0
     homo_lumo_index: int = 1000  # Displays either HOMO-[x] or LUMO+[x]
@@ -80,7 +80,9 @@ class SFO(Orbital):
     the index, irrep and spin of the SFO. The index is the order in which the SFOs are stored in the rkf file.
 
     Also possible is to initialize the class with a label. The correct format of the label is:
-    <index>_<irrep or <index>_<irrep>_<spin> if the SFO is from an unrestricted calculation.
+    <index>_<irrep> or <index>_<irrep>_<spin> if the SFO is from an unrestricted calculation.
+
+    e.g. "14_AA_A"
     """
 
     gross_pop: float = 1000.0
@@ -94,7 +96,9 @@ class SFO(Orbital):
     @property
     def amsview_label(self) -> str:
         """Returns the orbital label that can be used for AMSView plotting"""
-        return f"SFO_{self.irrep}_{self.index}_{self.spin}"
+        if self.spin is not None:
+            return f"SFO_{self.irrep}_{self.index}_{self.spin}"
+        return f"SFO_{self.irrep}_{self.index}"
 
 
 class MO(Orbital):
@@ -115,7 +119,9 @@ class MO(Orbital):
     @property
     def amsview_label(self) -> str:
         """Returns the orbital label that can be used for AMSView plotting"""
-        return f"SCF_{self.irrep}_{self.index}_{self.spin}"
+        if self.spin is not None:
+            return f"SCF_{self.irrep}_{self.index}_{self.spin}"
+        return f"SCF_{self.irrep}_{self.index}"
 
 
 def main():
