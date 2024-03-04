@@ -61,7 +61,7 @@ class OrbitalPair:
         plot_settings = AMSViewPlotSettings() if plot_settings is None else plot_settings
 
         for orb in [self.orb1, self.orb2]:
-            plot_orbital_with_amsview(str(rkf_file), self.orb1.amsview_label, plot_settings, save_file=output_dir / f"{self.orb1.irrep}_{self.orb1.index}")
+            plot_orbital_with_amsview(str(rkf_file), orb.amsview_label, plot_settings, save_file=output_dir / f"{orb.irrep}_{orb.index}")
 
     @staticmethod
     def format_orbital_pairs_for_printing(orb_pairs: list[OrbitalPair], top_header: str = "SFO Interaction Pairs") -> str:
