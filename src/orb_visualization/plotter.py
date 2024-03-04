@@ -46,12 +46,12 @@ PlotSettingsType = TypeVar("PlotSettingsType", bound=PlotSettings)
 
 def plot_orbital_with_amsview(
     input_file: str | pl.Path,
-    orb_specifier: str,
+    orb_specifier: str | None = None,
     plot_settings: AMSViewPlotSettings | None = AMSViewPlotSettings(),
     save_file: str | pl.Path | None = None,
 ) -> None:
     """
-    Runs the amsview command on the rkf files
+    Runs the amsview command on the rkf files. Can be used to plot orbitals and geometry.
 
     Args:
         input_file: Path to the input file that contains volume data such as .t21, .t41, .rkf, .vtk and .runkf files
@@ -75,12 +75,17 @@ def plot_orbital_with_amsview(
 
     Example command: amsview result.t41 -var SCF_A_8 -save "my_pic.png" -bgcolor "#FFFFFF" -transparent -antialias -scmgeometry "2160x1440" -wireframe
     """
-    command = ["amsview", str(input_file), "-var", orb_specifier]
+    command = ["amsview", str(input_file)]
+
+    if orb_specifier is not None:
+        command.append("-var")
+        command.append(str(orb_specifier))
 
     if plot_settings.hide_view:
         command.append("-batch")
 
     if save_file is not None:
+        save_file = pl.Path(save_file).with_suffix(".png")
         command.append("-save")
         command.append(str(save_file))
 
