@@ -7,15 +7,15 @@ def filter_sfos_by_interaction_type(frag1_sfos: list[SFO], frag2_sfos: list[SFO]
     """Returns the indices of relevant frag1 and frag 2 SFOs depending on the interaction type"""
 
     if interaction_type == SFOInteractionTypes.HOMO_HOMO:
-        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_occupied]
-        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_occupied]
+        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_fully_occupied]
+        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_fully_occupied]
 
     elif interaction_type == SFOInteractionTypes.HOMO_LUMO:
         frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_occupied]
-        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if not sfo.is_occupied]
+        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_virtual]
 
     elif interaction_type == SFOInteractionTypes.LUMO_HOMO:
-        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if not sfo.is_occupied]
+        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_virtual]
         frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_occupied]
 
     else:
@@ -28,11 +28,11 @@ def filter_sfos_by_interaction_type(frag1_sfos: list[SFO], frag2_sfos: list[SFO]
 def calculate_matrix_element(sfo1: SFO, sfo2: SFO, overlap: float) -> float:
     """Checks if the interaction is HOMO-HOMO / HOMO-LUMO / LUMO-LUMO and returns the correct value (see parent function docstring"""
     # LUMO-LUMO: non-physical
-    if not sfo1.is_occupied and not sfo2.is_occupied:
+    if sfo1.is_virtual and sfo2.is_virtual:
         return 0.0
 
     # HOMO-HOMO: Pauli repulsion
-    if sfo1.is_occupied and sfo2.is_occupied:
+    if sfo1.is_fully_occupied and sfo2.is_fully_occupied:
         return overlap**2 * 100
 
     # HOMO-LUMO / LUMO-HOMO: favorable orbital interactions (SCF process)
