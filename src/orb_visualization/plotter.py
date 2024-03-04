@@ -4,6 +4,7 @@ import subprocess
 from typing import TypeVar
 
 from attrs import asdict, define
+from orb_analysis.orbital.orbital import Orbital
 
 
 @define
@@ -154,3 +155,50 @@ def plot_orbital_with_amsreport(
     subprocess.run(["cp", f"{str(tmp_dir)}.jpgs/0.jpg", str(out_dir / f"{orb_specifier}.jpg")])
     shutil.rmtree(f"{tmp_dir}.jpgs")
     (out_dir / orb_specifier).unlink()  # remove a file that is created by amsreport which is not used
+
+
+def combine_orb_images_with_matplotlib(
+    orb1: Orbital,
+    orb1_image_path: str | pl.Path,
+    orb2: Orbital,
+    orb2_image_path: str | pl.Path,
+    out_path: str | pl.Path,
+    overlap: float | None = None,
+    energy_gap: float | None = None,
+    stabilization: float | None = None,
+) -> None:
+    """
+    Combines two orbital images into one image using matplotlib. The images are plotted on top of each other.
+
+    Args:
+        orb1: The first orbital
+        orb1_image_path: The path to the first orbital image
+        orb2: The second orbital
+        orb2_image_path: The path to the second orbital image
+        out_path: The path to the output image
+    """
+    import matplotlib.image as mpimg
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(1, 2, figsize=(5, 5))
+    img1 = mpimg.imread(orb1_image_path)
+    img2 = mpimg.imread(orb2_image_path)
+
+    for i, (orb, img) in enumerate(zip([orb1, orb2], [img1, img2])):
+        ax[i].imshow(img)
+        ax[i].set_title(f"{orb.amsview_label}\nGross Pop: {orb.gross_pop :.3f}\nEnergy: {orb.energy :.2f}", fontsize=12)  # NOQA E203
+        ax[i].axis("off")  # Turn off the axis
+
+        # Zoom in on the image
+        ax[i].set_xlim(img.shape[1] * 0.28, img.shape[1] * 0.72)
+        ax[i].set_ylim(img.shape[0] * 0.72, img.shape[0] * 0.28)
+
+    overlap_str = f"Overlap: {overlap:.3f}" if overlap is not None else ""
+    energy_gap_str = f"Energy gap (eV): {energy_gap:.3f}" if energy_gap is not None else ""
+    stabilization_str = f"Stabilization: {stabilization:.3f}" if stabilization is not None else ""
+
+    fig.tight_layout()
+
+    plt.suptitle(f"{overlap_str}\n{energy_gap_str}\n{stabilization_str}")
+    plt.savefig(out_path)
+    plt.close()

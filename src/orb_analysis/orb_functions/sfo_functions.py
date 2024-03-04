@@ -21,6 +21,7 @@ Important sections together with associated variables are (format: ("section", "
 that can be viewed in the KF Browser of AMS (open a "adf.rkf" file and press "ctrl + E" on Windows or "cmd + E" on Mac).
 * Active SFOs are SFOs that are not frozen cores.
 """
+
 from __future__ import annotations
 
 from typing import Callable, Sequence
@@ -153,7 +154,7 @@ def get_orbital_energies(kf_file: KFFile, spin: str = SpinTypes.A) -> Array1D[np
     """Reads the orbital energies from the KFFile."""
     # escale refers energies scaled by relativistic effects (ZORA). If no relativistic effects are present, "energy" is the appropriate key.
     variable = _get_orbital_energy_variable(kf_file)
-    print(f"Using {variable} for orbital energies")
+    # print(f"Using {variable} for orbital energies")
 
     # It is either "escale" or "escale_B", apparently there is no "escale_A" key (same for "energy")
     if spin == SpinTypes.B and ("SFOs", f"{variable}_{SpinTypes.B}") in kf_file:

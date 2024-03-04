@@ -1,6 +1,7 @@
 """
 Module containing the :Orbital: class that acts as a basis for symmetrized fragment orbitals (SFOs) and molecular orbitals (MOs).
 """
+
 from __future__ import annotations
 
 import math
@@ -99,6 +100,7 @@ class SFO(Orbital):
     """
 
     gross_pop: float = 1000.0
+    absolute_index: int = 0  # Used for determining the order of the SFOs in the rkf file. Fragment 2 SFOs are stored after fragment 1 SFOs, and the index continues from the last index of fragment 1.
 
     def __eq__(self, __value: str | SFO) -> bool:
         if isinstance(__value, str):
@@ -112,6 +114,21 @@ class SFO(Orbital):
         if self.spin is not None:
             return f"SFO_{self.irrep}_{self.index}_{self.spin}"
         return f"SFO_{self.irrep}_{self.index}"
+
+    @property
+    def plot_label(self) -> str:
+        """Returns the orbital label that can be used for AMSView plotting"""
+        label = "SFO"
+
+        if self.irrep.upper() != "A":
+            label = f"{label}_{self.irrep}"
+
+        label = f"{label}_{self.absolute_index}"
+
+        if self.spin is not None:
+            label = f"{label}_{self.spin}"
+
+        return label
 
 
 class MO(Orbital):
