@@ -1,8 +1,11 @@
 ﻿from __future__ import annotations
 
+import pathlib as pl
+
 import attrs
 import numpy as np
 import pandas as pd
+from orb_visualization.plotter import AMSViewPlotSettings, plot_orbital_with_amsview
 from tabulate import tabulate
 
 from orb_analysis.custom_types import Array1D
@@ -24,7 +27,7 @@ class OrbitalPair:
 
     @property
     def is_pauli_pair(self) -> bool:
-        return self.orb1.is_occupied and self.orb2.is_occupied
+        return self.orb1.is_fully_occupied and self.orb2.is_fully_occupied
 
     @property
     def energy_gap(self) -> float:
@@ -52,6 +55,13 @@ class OrbitalPair:
             ]
         )
         return array
+
+    def plot(self, rkf_file: pl.Path | str, output_dir: str | pl.Path, plot_settings: AMSViewPlotSettings | None = None):
+        """Plots the orbitals associated with this pair"""
+        plot_settings = AMSViewPlotSettings() if plot_settings is None else plot_settings
+
+        for orb in [self.orb1, self.orb2]:
+            plot_orbital_with_amsview(str(rkf_file), self.orb1.amsview_label, plot_settings, save_file=output_dir / f"{self.orb1.irrep}_{self.orb1.index}")
 
     @staticmethod
     def format_orbital_pairs_for_printing(orb_pairs: list[OrbitalPair], top_header: str = "SFO Interaction Pairs") -> str:

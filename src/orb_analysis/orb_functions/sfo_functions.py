@@ -26,8 +26,9 @@ from __future__ import annotations
 from typing import Callable, Sequence
 
 import numpy as np
-from orb_analysis.custom_types import Array1D, SpinTypes, UnrestrictedPropertyDict
 from scm.plams import KFFile
+
+from orb_analysis.custom_types import Array1D, SpinTypes, UnrestrictedPropertyDict
 
 # --------------------Helper Function(s)-------------------- #
 
@@ -133,10 +134,26 @@ def get_frozen_cores_per_irrep(kf_file: KFFile, frag_index: int) -> dict[str, in
 # --------------------Restricted Property Function(s)-------------------- #
 
 
+def _get_orbital_energy_variable(kf_file: KFFile) -> str:
+    """
+    Determines which key to use for reading the orbital energies from the KFFile.
+    The preference is in the order:
+        - "site-energies" (needs to be specified in the ADF input file)
+        - "escale" (when relativistic effects are present)
+        - "energy" (otherwise)
+    """
+    if ("SFOs", "site_energy") in kf_file:
+        return "site_energy"
+    if ("SFOs", "escale") in kf_file:
+        return "escale"
+    return "energy"
+
+
 def get_orbital_energies(kf_file: KFFile, spin: str = SpinTypes.A) -> Array1D[np.float64]:
     """Reads the orbital energies from the KFFile."""
     # escale refers energies scaled by relativistic effects (ZORA). If no relativistic effects are present, "energy" is the appropriate key.
-    variable = "escale" if ("SFOs", "escale") in kf_file else "energy"
+    variable = _get_orbital_energy_variable(kf_file)
+    print(f"Using {variable} for orbital energies")
 
     # It is either "escale" or "escale_B", apparently there is no "escale_A" key (same for "energy")
     if spin == SpinTypes.B and ("SFOs", f"{variable}_{SpinTypes.B}") in kf_file:
@@ -271,13 +288,13 @@ def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dic
 
         if frag_index == 1:
             return {
-                SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index : start_index + total_sfo_sum_frag1]},
-                SpinTypes.B: {"A": raw_gross_pop_all_sfos[total_sfo_for_one_spin : total_sfo_for_one_spin + total_sfo_sum_frag1]},
+                SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index : start_index + total_sfo_sum_frag1]},  # NOQA: E203
+                SpinTypes.B: {"A": raw_gross_pop_all_sfos[total_sfo_for_one_spin : total_sfo_for_one_spin + total_sfo_sum_frag1]},  # NOQA: E203
             }
 
         return {
-            SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index + total_sfo_sum_frag1 : start_index + total_sfo_sum_frag1 + total_sfo_sum_frag2]},
-            SpinTypes.B: {"A": raw_gross_pop_all_sfos[total_sfo_for_one_spin + total_sfo_sum_frag1 : total_sfo_for_one_spin + total_sfo_sum_frag1 + total_sfo_sum_frag2]},
+            SpinTypes.A: {"A": raw_gross_pop_all_sfos[start_index + total_sfo_sum_frag1 : start_index + total_sfo_sum_frag1 + total_sfo_sum_frag2]},  # NOQA: E203
+            SpinTypes.B: {"A": raw_gross_pop_all_sfos[total_sfo_for_one_spin + total_sfo_sum_frag1 : total_sfo_for_one_spin + total_sfo_sum_frag1 + total_sfo_sum_frag2]},  # NOQA: E203
         }
 
     gross_pop_active_sfos = {str(spin): {irrep: np.zeros_like(frags_sfo_irrep_sums[frag_index - 1][irrep], dtype=np.float64) for irrep in frags_sfo_irrep_sums[frag_index - 1]} for spin in SpinTypes}

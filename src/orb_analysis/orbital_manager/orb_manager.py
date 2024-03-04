@@ -78,7 +78,7 @@ class SFOManager(OrbitalManager):
             for index2, frag2_orb in enumerate(self.frag2_sfos):
                 overlap = self.overlap_matrix[index1, index2]
 
-                if frag1_orb.is_occupied and frag2_orb.is_occupied:
+                if frag1_orb.is_fully_occupied and frag2_orb.is_fully_occupied:
                     continue  # Pauli repulsion is not included in the stabilization matrix
                 stabilization_matrix[index1, index2] = calculate_matrix_element(sfo1=frag1_orb, sfo2=frag2_orb, overlap=overlap)
         return stabilization_matrix
@@ -140,7 +140,7 @@ class SFOManager(OrbitalManager):
         pauli_overlap_matrix = self.overlap_matrix.copy()
         for i, orb1 in enumerate(self.frag1_sfos):
             for j, orb2 in enumerate(self.frag2_sfos):
-                if not (orb1.is_occupied and orb2.is_occupied):
+                if not (orb1.is_fully_occupied and orb2.is_fully_occupied):
                     pauli_overlap_matrix[i, j] = 0
                 # magnitude of the overlap is most important; so make every value positive.
                 else:
@@ -151,7 +151,7 @@ class SFOManager(OrbitalManager):
         pairs = [OrbitalPair(self.frag1_sfos[i], self.frag2_sfos[j], float(self.overlap_matrix[i, j])) for i, j in zip(*indices)]
 
         # select the n_pairs most destabilizing pairs
-        return [pair for pair in pairs if pair.orb1.is_occupied and pair.orb2.is_occupied]
+        return [pair for pair in pairs if pair.is_pauli_pair]
 
     def get_most_stabilizing_oi_pairs(self, n_pairs: int = 4) -> list[OrbitalPair]:
         """
@@ -164,5 +164,5 @@ class SFOManager(OrbitalManager):
         indices = np.unravel_index(np.argsort(-stabilization_matrix, axis=None)[:n_pairs], stabilization_matrix.shape)
         pairs = [OrbitalPair(self.frag1_sfos[i], self.frag2_sfos[j], float(self.overlap_matrix[i, j])) for i, j in zip(*indices)]
 
-        # select the n_pairs most destabilizing pairs
-        return [pair for pair in pairs if (pair.orb1.is_occupied and not pair.orb2.is_occupied) or (not pair.orb1.is_occupied and pair.orb2.is_occupied)]
+        # select the n_pairs most stabilizing pairs
+        return [pair for pair in pairs if not pair.is_pauli_pair or (pair.orb1.is_virtual or pair.orb2.is_virtual)]

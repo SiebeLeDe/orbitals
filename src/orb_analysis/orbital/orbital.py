@@ -3,6 +3,7 @@ Module containing the :Orbital: class that acts as a basis for symmetrized fragm
 """
 from __future__ import annotations
 
+import math
 from abc import ABC, abstractmethod
 
 import attrs
@@ -47,6 +48,18 @@ class Orbital(ABC):
     @property
     def is_occupied(self) -> bool:
         return self.occupation >= 1e-6
+
+    @property
+    def is_singly_occupied(self) -> bool:
+        return math.isclose(self.occupation, 1.0, abs_tol=1e-6)
+
+    @property
+    def is_fully_occupied(self) -> bool:
+        return math.isclose(self.occupation, 2.0, abs_tol=1e-6)
+
+    @property
+    def is_virtual(self) -> bool:
+        return math.isclose(self.occupation, 0.0, abs_tol=1e-6)
 
     @property
     def homo_lumo_label(self) -> str:
