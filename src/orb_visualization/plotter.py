@@ -1,8 +1,10 @@
 import pathlib as pl
 import shutil
 import subprocess
-from typing import TypeVar
+from typing import Sequence, TypeVar
 
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 from attrs import asdict, define
 from orb_analysis.orbital.orbital import Orbital
 
@@ -13,7 +15,7 @@ class PlotSettings:
 
     bgcolor: str = "#FFFFFF"
     scmgeometry: str = "1920x1080"
-    zoom: float = 1.5
+    zoom: float = 2.0
     antialias: bool = True
     viewplane: str = "{0 0 1}"
     print_command: bool = True
@@ -28,10 +30,10 @@ class AMSViewPlotSettings(PlotSettings):
     viewplane: str = "0 0 1"  # Viewplane normal to the specified x,y,z direction
     grid: str = "Medium"
     hide_view: bool = True
-    # colorfield: str = "100 299 321"  # No idea what this value should be
-    # printrange: bool = True
-    # camera: int = -1  # Camera load-outs from AMS
-    # val: float = 0.03  # isovalue
+    colorfield: str = "0 65"  # No idea what this value should be
+    printrange: bool = True
+    camera: int = -1  # Camera load-outs from AMS
+    val: float = 0.03  # isovalue
     # ciso: bool = False
 
 
@@ -157,7 +159,50 @@ def plot_orbital_with_amsreport(
     (out_dir / orb_specifier).unlink()  # remove a file that is created by amsreport which is not used
 
 
+T = TypeVar("T", bound=Orbital)
+
+
 def combine_orb_images_with_matplotlib(
+    system_name: str,
+    orbs: Sequence[T],
+    orb_image_paths: Sequence[str | pl.Path],
+    out_path: str | pl.Path,
+) -> None:
+    """Combines multiple orbital images into one image using matplotlib. The images are plotted in an array of subplots."""
+    n_orbs = len(orbs)
+    n_cols = 4
+    n_rows = n_orbs // n_cols + 1
+
+    fig, ax = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
+
+    # Flatten the axes
+    ax = ax.flatten()
+
+    orb_images = [mpimg.imread(orb_image_path) for orb_image_path in orb_image_paths]
+
+    for i in range(n_rows * n_cols):
+        if i < n_orbs:
+            orb = orbs[i]
+            img = orb_images[i]
+            ax[i].imshow(img)
+            ax[i].set_title(f"{orb.amsview_label}\n{orb.homo_lumo_label}\nEnergy (eV): {orb.energy :.3f}", fontsize=12)  # NOQA E203
+            ax[i].axis("off")  # Turn off the axis
+
+            # Zoom in on the image
+            ax[i].set_xlim(img.shape[1] * 0.28, img.shape[1] * 0.72)
+            ax[i].set_ylim(img.shape[0] * 0.72, img.shape[0] * 0.28)
+        else:
+            # Remove the extra subplot
+            fig.delaxes(ax[i])
+
+    fig.tight_layout()
+
+    plt.suptitle(system_name)
+    plt.savefig(out_path)
+    plt.close()
+
+
+def combine_sfo_images_with_matplotlib(
     orb1: Orbital,
     orb1_image_path: str | pl.Path,
     orb2: Orbital,
@@ -177,8 +222,6 @@ def combine_orb_images_with_matplotlib(
         orb2_image_path: The path to the second orbital image
         out_path: The path to the output image
     """
-    import matplotlib.image as mpimg
-    import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(1, 2, figsize=(5, 5))
     img1 = mpimg.imread(orb1_image_path)
@@ -186,7 +229,7 @@ def combine_orb_images_with_matplotlib(
 
     for i, (orb, img) in enumerate(zip([orb1, orb2], [img1, img2])):
         ax[i].imshow(img)
-        ax[i].set_title(f"{orb.amsview_label}\nGross Pop: {orb.gross_pop :.3f}\nEnergy: {orb.energy :.2f}", fontsize=12)  # NOQA E203
+        ax[i].set_title(f"{orb.amsview_label}\nGross Pop: {orb.gross_pop :.3f}\nEnergy (eV): {orb.energy :.2f}", fontsize=12)  # NOQA E203
         ax[i].axis("off")  # Turn off the axis
 
         # Zoom in on the image

@@ -47,6 +47,10 @@ class MOManager(OrbitalManager):
 
         return table
 
+    def __iter__(self):
+        """Iterates through the self.complex_mos attribute"""
+        yield from self.complex_mos
+
 
 @attrs.define
 class SFOManager(OrbitalManager):

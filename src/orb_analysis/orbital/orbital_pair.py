@@ -5,7 +5,7 @@ import pathlib as pl
 import attrs
 import numpy as np
 import pandas as pd
-from orb_visualization.plotter import AMSViewPlotSettings, combine_orb_images_with_matplotlib, plot_orbital_with_amsview
+from orb_visualization.plotter import AMSViewPlotSettings, combine_sfo_images_with_matplotlib, plot_orbital_with_amsview
 from tabulate import tabulate
 
 from orb_analysis.custom_types import Array1D
@@ -67,7 +67,7 @@ class OrbitalPair:
                 plot_orbital_with_amsview(str(rkf_file), orb.plot_label, plot_settings, save_file=save_file)
             image_paths.append(save_file)
 
-        combine_orb_images_with_matplotlib(
+        combine_sfo_images_with_matplotlib(
             orb1=self.sfo1,
             orb2=self.sfo2,
             orb1_image_path=image_paths[0],
