@@ -12,10 +12,10 @@ def filter_sfos_by_interaction_type(frag1_sfos: list[SFO], frag2_sfos: list[SFO]
 
     elif interaction_type == SFOInteractionTypes.HOMO_LUMO:
         frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_occupied]
-        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_virtual]
+        frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_virtual or sfo.is_singly_occupied]
 
     elif interaction_type == SFOInteractionTypes.LUMO_HOMO:
-        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_virtual]
+        frag1_filtered_indices = [index for index, sfo in enumerate(frag1_sfos) if sfo.is_virtual or sfo.is_singly_occupied]
         frag2_filtered_indices = [index for index, sfo in enumerate(frag2_sfos) if sfo.is_occupied]
 
     else:

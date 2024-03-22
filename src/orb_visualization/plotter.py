@@ -6,7 +6,7 @@ from typing import Sequence, TypeVar
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from attrs import asdict, define
-from orb_analysis.orbital.orbital import Orbital
+from orb_analysis.orbital.orbital import SFO, Orbital
 
 
 @define
@@ -49,16 +49,17 @@ PlotSettingsType = TypeVar("PlotSettingsType", bound=PlotSettings)
 
 def plot_orbital_with_amsview(
     input_file: str | pl.Path,
-    orb_specifier: str | None = None,
-    plot_settings: AMSViewPlotSettings | None = AMSViewPlotSettings(),
+    sfo_specifier: str | None = None,
+    plot_settings: AMSViewPlotSettings | None = None,
     save_file: str | pl.Path | None = None,
+    calculated_field_specified: str | None = None,
 ) -> None:
     """
     Runs the amsview command on the rkf files. Can be used to plot orbitals and geometry.
 
     Args:
         input_file: Path to the input file that contains volume data such as .t21, .t41, .rkf, .vtk and .runkf files
-        orb_specifier: The orbital specifier with the format [type]_[irrep]_[index] such as SCF_A_6 or SFO_E1:1_1
+        sfo_specifier: The orbital specifier with the format [type]_[irrep]_[index] such as SCF_A_6 or SFO_E1:1_1
         plot_settings: Instance of PlotSettings with the following attributes:
             - bgcolor: The background color in hexadecimals (start with # and then 6 digits)
             - scmgeometry: The size of the image (WxH in pixels, e.g. "1920x1080")
@@ -76,13 +77,21 @@ def plot_orbital_with_amsview(
 
     Check for all options by running amsview -h
 
-    Example command: amsview result.t41 -var SCF_A_8 -save "my_pic.png" -bgcolor "#FFFFFF" -transparent -antialias -scmgeometry "2160x1440" -wireframe
+    Example command for one MO: amsview result.t41 -var SCF_A_8 -save "my_pic.png" -bgcolor "#FFFFFF" -transparent -antialias -scmgeometry "2160x1440" -wireframe
+    Example command for one SFO: amsview result.t41 -var SFO_8 -save "my_pic.png" -bgcolor "#FFFFFF" -transparent -antialias -scmgeometry "2160x1440" -wireframe
+    Example command for overlap field: amsview result.t41 -calculated "SFO_7 * SFO_7" -save "my_pic.png" -bgcolor "#FFFFFF" -transparent -antialias -scmgeometry "2160x1440" -wireframe
     """
+    plot_settings = plot_settings or AMSViewPlotSettings()
+
     command = ["amsview", str(input_file)]
 
-    if orb_specifier is not None:
+    # Either calculate a product of MOs with
+    if calculated_field_specified is not None:
+        command.append("-calculated")
+        command.append(f"'{str(calculated_field_specified)}'")
+    elif sfo_specifier is not None:
         command.append("-var")
-        command.append(str(orb_specifier))
+        command.append(str(sfo_specifier))
 
     if plot_settings.hide_view:
         command.append("-batch")
@@ -93,13 +102,16 @@ def plot_orbital_with_amsview(
         command.append(str(save_file))
 
     dict_settings = asdict(plot_settings)
+
+    if plot_settings.camera > 0:
+        dict_settings.pop("viewplane")
+    elif plot_settings.camera < 0:
+        dict_settings.pop("camera")
+
     for key, value in dict_settings.items():
         if key.lower() in ["wireframe", "transparent", "antialias", "printrange", "ciso"]:
             if value:
                 command.append(f"-{key}")
-            continue
-
-        if key.lower() == "camera" and not value > 0:
             continue
 
         command.append(f"-{key}")
@@ -113,8 +125,8 @@ def plot_orbital_with_amsview(
 def plot_orbital_with_amsreport(
     input_file: str | pl.Path,
     out_dir: str | pl.Path,
-    orb_specifier: str,
-    plot_settings: PlotSettingsType | None = AMSViewPlotSettings(),
+    sfo_specifier: str,
+    plot_settings: PlotSettings | None = None,
 ) -> None:
     """
     Runs the amsreport command on the rkf files
@@ -122,7 +134,7 @@ def plot_orbital_with_amsreport(
 
     Args:
         input_file: Path to the input file e.g., .t21, .t41, .rkf,
-        orb_specifier: The orbital specifier, e.g., "HOMO[-x]" and "LUMO[+x]" (see link for more options)
+        sfo_specifier: The orbital specifier, e.g., "HOMO[-x]" and "LUMO[+x]" (see link for more options)
         plot_settings: Instance of PlotSettings with the following attributes:
             - bgcolor: The background color in hexadecimals (start with # and then 6 digits)
             - scmgeometry: The size of the image (WxH in pixels, e.g. "1920x1080")
@@ -133,9 +145,11 @@ def plot_orbital_with_amsreport(
             - hide_view: Whether to hide the amsview application (bool)
             - print_command: Whether to print the command (bool)
     """
-    tmp_dir = out_dir / orb_specifier
+    plot_settings = plot_settings or AMSViewPlotSettings()
+    out_dir = pl.Path(out_dir)
+    tmp_dir = out_dir / sfo_specifier
 
-    command = ["amsreport", "-i", str(input_file), "-o", str(tmp_dir), orb_specifier]
+    command = ["amsreport", "-i", str(input_file), "-o", str(tmp_dir), sfo_specifier]
 
     dict_settings = asdict(plot_settings)
     for key, value in dict_settings.items():
@@ -154,38 +168,35 @@ def plot_orbital_with_amsreport(
     subprocess.run(command)
 
     # Copy all the files from the tmp directory to the out_dir
-    subprocess.run(["cp", f"{str(tmp_dir)}.jpgs/0.jpg", str(out_dir / f"{orb_specifier}.jpg")])
+    subprocess.run(["cp", f"{str(tmp_dir)}.jpgs/0.jpg", str(out_dir / f"{sfo_specifier}.jpg")])
     shutil.rmtree(f"{tmp_dir}.jpgs")
-    (out_dir / orb_specifier).unlink()  # remove a file that is created by amsreport which is not used
-
-
-T = TypeVar("T", bound=Orbital)
+    (out_dir / sfo_specifier).unlink()  # remove a file that is created by amsreport which is not used
 
 
 def combine_orb_images_with_matplotlib(
     system_name: str,
-    orbs: Sequence[T],
-    orb_image_paths: Sequence[str | pl.Path],
+    sfos: Sequence[Orbital],
+    sfo_image_paths: Sequence[str | pl.Path],
     out_path: str | pl.Path,
 ) -> None:
     """Combines multiple orbital images into one image using matplotlib. The images are plotted in an array of subplots."""
-    n_orbs = len(orbs)
+    n_sfos = len(sfos)
     n_cols = 4
-    n_rows = n_orbs // n_cols + 1
+    n_rows = n_sfos // n_cols + 1
 
     fig, ax = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
 
     # Flatten the axes
     ax = ax.flatten()
 
-    orb_images = [mpimg.imread(orb_image_path) for orb_image_path in orb_image_paths]
+    sfo_images = [mpimg.imread(sfo_image_path) for sfo_image_path in sfo_image_paths]
 
     for i in range(n_rows * n_cols):
-        if i < n_orbs:
-            orb = orbs[i]
-            img = orb_images[i]
+        if i < n_sfos:
+            sfo = sfos[i]
+            img = sfo_images[i]
             ax[i].imshow(img)
-            ax[i].set_title(f"{orb.amsview_label}\n{orb.homo_lumo_label}\nEnergy (eV): {orb.energy :.3f}", fontsize=12)  # NOQA E203
+            ax[i].set_title(f"{sfo.amsview_label}\n{sfo.homo_lumo_label}\nEnergy (eV): {sfo.energy :.3f}", fontsize=12)  # NOQA E203
             ax[i].axis("off")  # Turn off the axis
 
             # Zoom in on the image
@@ -203,41 +214,41 @@ def combine_orb_images_with_matplotlib(
 
 
 def combine_sfo_images_with_matplotlib(
-    orb1: Orbital,
-    orb1_image_path: str | pl.Path,
-    orb2: Orbital,
-    orb2_image_path: str | pl.Path,
+    sfo1: SFO,
+    sfo1_image_path: str | pl.Path,
+    sfo2: SFO,
+    sfo2_image_path: str | pl.Path,
     out_path: str | pl.Path,
     overlap: float | None = None,
     energy_gap: float | None = None,
     stabilization: float | None = None,
 ) -> None:
     """
-    Combines two orbital images into one image using matplotlib. The images are plotted on top of each other.
+    Combines two SFO images into one image using matplotlib. The images are plotted on top of each other.
 
     Args:
-        orb1: The first orbital
-        orb1_image_path: The path to the first orbital image
-        orb2: The second orbital
-        orb2_image_path: The path to the second orbital image
+        sfo1: The first SFO
+        sfo1_image_path: The path to the first SFO image
+        sfo2: The second SFO
+        sfo2_image_path: The path to the second SFO image
         out_path: The path to the output image
     """
 
     fig, ax = plt.subplots(1, 2, figsize=(5, 5))
-    img1 = mpimg.imread(orb1_image_path)
-    img2 = mpimg.imread(orb2_image_path)
+    img1 = mpimg.imread(sfo1_image_path)
+    img2 = mpimg.imread(sfo2_image_path)
 
-    for i, (orb, img) in enumerate(zip([orb1, orb2], [img1, img2])):
+    for i, (sfo, img) in enumerate(zip([sfo1, sfo2], [img1, img2])):
         ax[i].imshow(img)
-        ax[i].set_title(f"{orb.amsview_label}\nGross Pop: {orb.gross_pop :.3f}\nEnergy (eV): {orb.energy :.2f}", fontsize=12)  # NOQA E203
+        ax[i].set_title(f"{sfo.amsview_label}\nGross Pop: {sfo.gross_pop :.3f}\nEnergy (eV): {sfo.energy :.2f}", fontsize=12)  # NOQA E203
         ax[i].axis("off")  # Turn off the axis
 
         # Zoom in on the image
         ax[i].set_xlim(img.shape[1] * 0.28, img.shape[1] * 0.72)
         ax[i].set_ylim(img.shape[0] * 0.72, img.shape[0] * 0.28)
 
-    overlap_str = f"Overlap: {overlap:.3f}" if overlap is not None else ""
-    energy_gap_str = f"Energy gap (eV): {energy_gap:.3f}" if energy_gap is not None else ""
+    overlap_str = f"Overlap: {overlap:.3f}" or ""
+    energy_gap_str = f"Energy gap (eV): {energy_gap:.3f}" or ""
     stabilization_str = f"Stabilization: {stabilization:.3f}" if stabilization is not None else ""
 
     fig.tight_layout()

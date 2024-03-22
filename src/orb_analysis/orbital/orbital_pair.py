@@ -34,9 +34,9 @@ class OrbitalPair:
         return abs(self.sfo1.energy - self.sfo2.energy)
 
     @property
-    def stabilization(self) -> float | str:
+    def stabilization(self) -> float | None:
         if self.is_pauli_pair:
-            return "---"
+            return None
         return calculate_matrix_element(self.sfo1, self.sfo2, self.overlap)
 
     @property
@@ -68,10 +68,10 @@ class OrbitalPair:
             image_paths.append(save_file)
 
         combine_sfo_images_with_matplotlib(
-            orb1=self.sfo1,
-            orb2=self.sfo2,
-            orb1_image_path=image_paths[0],
-            orb2_image_path=image_paths[1],
+            sfo1=self.sfo1,
+            sfo2=self.sfo2,
+            sfo1_image_path=image_paths[0],
+            sfo2_image_path=image_paths[1],
             out_path=output_dir / f"{self.sfo1.amsview_label}-{self.sfo2.amsview_label}",
             overlap=self.overlap,
             energy_gap=self.energy_gap,
