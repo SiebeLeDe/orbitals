@@ -169,4 +169,4 @@ class SFOManager(OrbitalManager):
         pairs = [OrbitalPair(self.frag1_sfos[i], self.frag2_sfos[j], float(self.overlap_matrix[i, j])) for i, j in zip(*indices)]
 
         # select the n_pairs most stabilizing pairs
-        return [pair for pair in pairs if not pair.is_pauli_pair or (pair.orb1.is_virtual or pair.orb2.is_virtual)]
+        return [pair for pair in pairs if not pair.is_pauli_pair or (pair.sfo1.is_virtual or pair.sfo2.is_virtual)]

@@ -1,12 +1,13 @@
-from scm.plams import Settings, DensfJob, init, finish, KFFile
 import pathlib as pl
+
+import matplotlib.pyplot as plt
 from orb_visualization.densf_presets import grid, orbital, output
 from orb_visualization.plotter import AMSViewPlotSettings, plot_orbital_with_amsview
-import matplotlib.pyplot as plt
+from scm.plams import DensfJob, KFFile, Settings, finish, init
 
 
 # ------------------Available test files------------------
-class Restricted_TestFiles:
+class RestrictedTestFiles:
     FILE1 = "restricted_largecore_differentfragsym_c4v_full"
     FILE2 = "restricted_largecore_differentfragsym_c4v_full"
     FILE3 = "restricted_largecore_fragsym_c3v_nonrelativistic_full"
@@ -17,7 +18,7 @@ class Restricted_TestFiles:
 
 # --------------------Input Arguments-------------------- #
 current_path = pl.Path(__file__).parent
-path_to_folder_with_rkf_files = (current_path.parent / "test" / "fixtures" / "rkfs")
+path_to_folder_with_rkf_files = current_path.parent / "test" / "fixtures" / "rkfs"
 rkf_file = "restricted_nocore_fragsym_nosym_full"
 output_dirname = "densf_unrestricted_output"
 plams_foldername = "densf_calc"
@@ -80,7 +81,7 @@ num_rows = (num_plots + 2) // 3 if num_plots > 1 else 1
 num_cols = min(num_plots, 3) if num_plots > 1 else 1
 
 # Create subplots
-fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 4*num_rows))
+fig, axes = plt.subplots(num_rows, num_cols, figsize=(12, 4 * num_rows))
 if axes.ndim == 1:
     axes = axes.reshape(1, -1)
 

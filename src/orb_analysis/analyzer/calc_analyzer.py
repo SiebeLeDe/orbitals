@@ -1,6 +1,7 @@
 ﻿"""
 Module containing classes that stores information of the complex calculation in fragment analysis calculations.
 """
+
 from __future__ import annotations
 
 import pathlib as pl
@@ -175,27 +176,27 @@ class UnrestrictedCalcAnalyser(CalcAnalyzer):
             return 0.0
 
         return self._get_fragment(0).get_overlap(
-            kf_file=self.kf_file, uses_symmetry=self.calc_info.symmetry, irrep1=sfo1.irrep, index1=sfo1.index, irrep2=sfo2.irrep, index2=sfo2.index, spin=sfo1.spin
+            kf_file=self.kf_file, uses_symmetry=self.calc_info.symmetry, irrep1=sfo1.irrep, index1=sfo1.index, irrep2=sfo2.irrep, index2=sfo2.index, spin=str(sfo1.spin)
         )
 
     def get_sfo_gross_population(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)
-        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
+        return self._get_fragment(fragment).get_gross_population(irrep=sfo.irrep, index=sfo.index, spin=str(sfo.spin))
 
     def get_sfo_orbital_energy(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)
-        return self._get_fragment(fragment).get_orbital_energy(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
+        return self._get_fragment(fragment).get_orbital_energy(irrep=sfo.irrep, index=sfo.index, spin=str(sfo.spin))
 
     def get_sfo_occupation(self, fragment: int, sfo: str | SFO):
         sfo = self._get_sfo(sfo)
-        return self._get_fragment(fragment).get_occupation(irrep=sfo.irrep, index=sfo.index, spin=sfo.spin)
+        return self._get_fragment(fragment).get_occupation(irrep=sfo.irrep, index=sfo.index, spin=str(sfo.spin))
 
     def get_mo_orbitals(self, orb_range: tuple[int, int] = (-10, 10), irrep: str | None = None, spin: str | None = None) -> MOManager:
         mos = self.complex.get_mos(orb_range=orb_range, orb_irrep=irrep, spin=spin)
         return MOManager(complex_mos=mos)
 
     def get_sfo_orbitals(self, frag1_orb_range: tuple[int, int] = (10, 10), frag2_orb_range: tuple[int, int] = (10, 10), irrep: str | None = None, spin: str | None = None) -> SFOManager:
-        frag_sfos = [frag.get_sfos(homo_lumo_range, irrep, spin) for homo_lumo_range, frag in zip([frag1_orb_range, frag2_orb_range], self.fragments)]
+        frag_sfos = [frag.get_sfos(homo_lumo_range, irrep, str(spin)) for homo_lumo_range, frag in zip([frag1_orb_range, frag2_orb_range], self.fragments)]
         frag_sfos[1] = frag_sfos[1][::-1]  # reverse the orbitals to go from LUMO+x -> HOMO-x to HOMO-x -> LUMO+x
 
         # First, we want to store frag1 orbitals from LUMO+x to HOMO-x for easier printing later on

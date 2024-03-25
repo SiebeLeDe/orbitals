@@ -14,13 +14,19 @@ For all of these calculations, the following methods are tested:
 The tests are based on the calculations with the molecule AsH3 + GaCl3 (heavier derivative of NH3 + BCl3) in C3v symmetry.
 Note: this module only contains restricted calculations. The unrestricted calculations are tested in `test_unrestricted_calcanalyzer.py`
 """
+
 import pathlib as pl
 
 import pytest
+from orb_analysis import orb_config
 from orb_analysis.analyzer.calc_analyzer import CalcAnalyzer, create_calc_analyser
 
 current_dir = pl.Path(__file__).parent
 fixtures_dir = current_dir / "fixtures" / "rkfs"
+
+# The orbital energy key and unit need to be fixed because the tests have been written for the conditions below
+orb_config.rkf_reading.orbital_energy_key = "escale"
+orb_config.rkf_reading.orbital_energy_unit = "hartree"
 
 
 @pytest.fixture()

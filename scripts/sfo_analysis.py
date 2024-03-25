@@ -5,7 +5,6 @@ import numpy as np
 from orb_analysis.analyzer.calc_analyzer import create_calc_analyser
 from orb_analysis.orbital.orbital_pair import OrbitalPair
 from orb_analysis.orbital_manager.orb_manager import OrbitalManager
-from scm.plams import Units
 
 np.set_printoptions(precision=5, suppress=True)
 
@@ -79,14 +78,13 @@ systems = [calc.replace("X", str(type_calc)) for calc in systems]
 # 2. Load the specific pyfrag calculation that is the closest to the specified point.
 rkf_files = [calc_dir / f"{system}.adf.rkf" for system in systems]
 calc_analyzers = [create_calc_analyser(rkf_file, name=calc) for calc, rkf_file in zip(systems, rkf_files)]
-# sfo_managers = [calc_analyzer.get_sfo_orbitals(orb_range, orb_range, irrep) for calc_analyzer in calc_analyzers]
+sfo_managers = [calc_analyzer.get_sfo_orbitals(orb_range, orb_range, irrep) for calc_analyzer in calc_analyzers]
 # mo_managers = [calc_analyzer.get_mo_orbitals((11, 11), irrep) for calc_analyzer in calc_analyzers]
 
 grosspop1 = calc_analyzers[0].get_sfo_gross_population(1, "23_AA_A")
 grosspop2 = calc_analyzers[0].get_sfo_gross_population(2, "15_AA_A")
 e1 = calc_analyzers[0].get_sfo_orbital_energy(1, "23_AA_A")
 e2 = calc_analyzers[0].get_sfo_orbital_energy(2, "15_AA_A")
-e1, e2 = Units.convert(e1, "hartree", "eV"), Units.convert(e2, "hartree", "eV")
 overlap = calc_analyzers[0].get_sfo_overlap("23_AA_A", "15_AA_A")
 
 print(
@@ -100,6 +98,8 @@ print(
       Stabilization energy: {overlap**2 / abs(e1 - e2) * 100:.3f}
       """
 )
+
+print(sfo_managers[0])
 # output_dir.mkdir(exist_ok=True)
 # write_orbital_data_to_file("SFO", sfo_managers, output_dir)
 # write_orbital_data_to_file("MO", mo_managers, output_dir)

@@ -1,6 +1,7 @@
 """
 Module containing classes that stores information of the complex calculation in fragment analysis calculations.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -94,7 +95,7 @@ class RestrictedComplex(Complex):
         orb_energies = self.complex_data.orb_energies
         occupations = self.complex_data.occupations
 
-        return self._get_mos(orb_range, orb_irrep, spin, orb_energies, occupations)
+        return self._get_mos(orb_range, orb_irrep, str(spin), orb_energies, occupations)
 
 
 class UnrestrictedComplex(Complex):

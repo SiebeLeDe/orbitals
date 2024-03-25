@@ -62,7 +62,7 @@ class OrbitalPair:
 
         image_paths = []
         for orb in [self.sfo1, self.sfo2]:
-            save_file = pl.Path(output_dir / f"{orb.irrep}_{orb.index}.png")
+            save_file = pl.Path(output_dir) / f"{orb.irrep}_{orb.index}.png"
             if not save_file.exists():
                 plot_orbital_with_amsview(str(rkf_file), orb.plot_label, plot_settings, save_file=save_file)
             image_paths.append(save_file)
@@ -72,7 +72,7 @@ class OrbitalPair:
             sfo2=self.sfo2,
             sfo1_image_path=image_paths[0],
             sfo2_image_path=image_paths[1],
-            out_path=output_dir / f"{self.sfo1.amsview_label}-{self.sfo2.amsview_label}",
+            out_path=pl.Path(output_dir) / f"{self.sfo1.amsview_label}-{self.sfo2.amsview_label}",
             overlap=self.overlap,
             energy_gap=self.energy_gap,
             stabilization=self.stabilization,

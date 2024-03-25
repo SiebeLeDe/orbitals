@@ -1,0 +1,3 @@
+[rkf_reading]
+orbital_energy_unit = "eV"
+orbital_energy_key = "escale"

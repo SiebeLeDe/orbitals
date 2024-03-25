@@ -27,8 +27,9 @@ from __future__ import annotations
 from typing import Callable, Sequence
 
 import numpy as np
-from scm.plams import KFFile
+from scm.plams import KFFile, Units
 
+from orb_analysis import orb_config
 from orb_analysis.custom_types import Array1D, SpinTypes, UnrestrictedPropertyDict
 
 # --------------------Helper Function(s)-------------------- #
@@ -143,10 +144,19 @@ def _get_orbital_energy_variable(kf_file: KFFile) -> str:
         - "escale" (when relativistic effects are present)
         - "energy" (otherwise)
     """
-    if ("SFOs", "site_energy") in kf_file:
-        return "site_energy"
+    energy_key = orb_config.rkf_reading.orbital_energy_key
+
+    if ("SFOs", energy_key) in kf_file:
+        return energy_key
+    else:
+        print(f"Could not find the key {energy_key} in the KFFile. Using 'escale' instead, which are the relativistically scaled orbital energies.")
+
     if ("SFOs", "escale") in kf_file:
         return "escale"
+    else:
+        print("Could not find the key 'escale' in the KFFile. Using 'energy' instead, which are the non-relativistically scaled orbital energies.")
+
+    # This key is always present in the KFFile
     return "energy"
 
 
@@ -161,9 +171,9 @@ def get_orbital_energies(kf_file: KFFile, spin: str = SpinTypes.A) -> Array1D[np
         variable = f"{variable}_{SpinTypes.B}"
 
     # Reads the orbital energies for both fragments and selects the data for the current fragment
-    orb_energies = np.array(kf_file.read("SFOs", variable))  # type: ignore
+    orb_energies = np.array(kf_file.read("SFOs", variable)) * Units.conversion_ratio("hartree", orb_config.rkf_reading.orbital_energy_unit)  # type: ignore
 
-    return orb_energies
+    return orb_energies  # type: ignore since plams Units does not include type hints
 
 
 def get_occupations(kf_file: KFFile, spin: str = SpinTypes.A) -> Array1D[np.float64]:
@@ -223,6 +233,9 @@ def get_fragment_properties(kf_file: KFFile, frag_index: int) -> UnrestrictedPro
             data_dic_to_be_unpacked[property][spin] = split_1d_array_into_dict_sorted_by_irreps(data_array=data, irreps=frag_irreps_each_sfo)
 
     return data_dic_to_be_unpacked
+
+
+# --------------------Gross Population Function(s)-------------------- #
 
 
 def get_gross_populations(kf_file: KFFile, frag_index: int = 1) -> dict[str, dict[str, Array1D[np.float64]]]:
@@ -329,6 +342,7 @@ def main():
     rkf_dir = current_dir.parent.parent.parent / "test" / "fixtures" / "rkfs"
     # rkf_file = 'restricted_largecore_differentfragsym_c4v_full.adf.rkf'
     # rkf_file = "restricted_largecore_differentfragsym_c4v_full.adf.rkf"
+    rkf_file = "restricted_nocore_fragsym_nosym_full.adf.rkf"
     rkf_file = "unrestricted_largecore_fragsym_c3v_full.adf.rkf"
     kf_file = KFFile(str(rkf_dir / rkf_file))
 

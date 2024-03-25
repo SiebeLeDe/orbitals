@@ -1,8 +1,8 @@
-﻿""" Module containing messages for logging and providing feedback to the user. """
+﻿"""Module containing messages for logging and providing feedback to the user."""
+
 import textwrap
 
 from orb_analysis.custom_types import SFOInteractionTypes
-
 
 OVERLAP_MATRIX_NOTE = "Overlap (S in arbitrary units [a.u.]) is guaranteed 0.0 when the irreps do not match and when both are unoccupied [LUMO-LUMO; non-physical]. "
 OVERLAP_MATRIX_NOTE += "HOMO-HOMO overlaps are related to Pauli repulsion, and HOMO-LUMO overlaps to stabilizing orbital interactions"
